@@ -1,0 +1,25 @@
+{
+	"id": 0,
+	"device": "air conditioning",
+	"manufacturer": "",
+	"model": "",
+	"modes": [
+		{
+			"id": 0,
+			"name": "off",
+			"power_consumption": 0
+		},
+		{
+			"id": 1,
+			"name": "cool",
+			"power_consumption": 336,
+			"default_duration": 3337
+		},
+		{
+			"id": 2,
+			"name": "heat",
+			"power_consumption": 656,
+			"default_duration": 30176
+		}
+	]
+}

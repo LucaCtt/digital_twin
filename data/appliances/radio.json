@@ -1,0 +1,25 @@
+{
+	"id": 12,
+	"device": "radio",
+	"manufacturer": "Denon",
+	"model": "DRA-275RD",
+	"modes": [
+		{
+			"id": 0,
+			"name": "off",
+			"power_consumption": 0
+		},
+		{
+			"id": 1,
+			"name": "stand-by",
+			"power_consumption": 1,
+			"default_duration": 80
+		},
+		{
+			"id": 2,
+			"name": "on",
+			"power_consumption": 37,
+			"default_duration": 4435
+		}
+	]
+}

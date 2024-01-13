@@ -1,0 +1,18 @@
+{
+	"id": 4,
+	"device": "fridge freezer",
+	"manufacturer": "Siemens",
+	"model": "",
+	"modes": [
+		{
+			"id": 0,
+			"name": "off",
+			"power_consumption": 0
+		},
+		{
+			"id": 1,
+			"name": "on",
+			"power_consumption": 208
+		}
+	]
+}

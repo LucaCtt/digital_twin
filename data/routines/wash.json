@@ -1,0 +1,21 @@
+{
+    "id": 1,
+    "name": "Lavaggio",
+    "when": [
+        "Today",
+        "19:00"
+    ],
+    "enabled": true,
+    "actions": [
+        {
+            "id": "1",
+            "appliance_id": 15,
+            "mode_id": 4
+        },
+        {
+            "id": "2",
+            "appliance_id": 3,
+            "mode_id": 2
+        }
+    ]
+}

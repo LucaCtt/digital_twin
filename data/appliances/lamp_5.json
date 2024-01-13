@@ -1,0 +1,19 @@
+{
+	"id": 10,
+	"device": "lamp",
+	"manufacturer": "",
+	"model": "",
+	"modes": [
+		{
+			"id": 0,
+			"name": "off",
+			"power_consumption": 0
+		},
+		{
+			"id": 1,
+			"name": "on",
+			"power_consumption": 19,
+			"default_duration": 587
+		}
+	]
+}

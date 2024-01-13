@@ -1,0 +1,55 @@
+{
+	"id": 11,
+	"device": "microwave",
+	"manufacturer": "Whirpool",
+	"model": "AMW 494/IX",
+	"modes": [
+		{
+			"id": 0,
+			"name": "off",
+			"power_consumption": 0
+		},
+		{
+			"id": 1,
+			"name": "stand-by",
+			"power_consumption": 5,
+			"default_duration": 1500
+		},
+		{
+			"id": 2,
+			"name": "microwave",
+			"power_consumption": 750,
+			"default_duration": 300
+		},
+		{
+			"id": 3,
+			"name": "crisp",
+			"power_consumption": 500,
+			"default_duration": 300
+		},
+		{
+			"id": 4,
+			"name": "grill",
+			"power_consumption": 500,
+			"default_duration": 300
+		},
+		{
+			"id": 5,
+			"name": "grill+microwave",
+			"power_consumption": 500,
+			"default_duration": 300
+		},
+		{
+			"id": 6,
+			"name": "steam",
+			"power_consumption": 350,
+			"default_duration": 300
+		},
+		{
+			"id": 7,
+			"name": "jet defrost",
+			"power_consumption": 900,
+			"default_duration": 300
+		}
+	]
+}

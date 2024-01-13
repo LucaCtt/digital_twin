@@ -1,0 +1,31 @@
+{
+	"id": 1,
+	"device": "boiler",
+	"manufacturer": "",
+	"model": "",
+	"modes": [
+		{
+			"id": 0,
+			"name": "off",
+			"power_consumption": 0
+		},
+		{
+			"id": 1,
+			"name": "holiday",
+			"power_consumption": 33,
+			"default_duration": 300
+		},
+		{
+			"id": 2,
+			"name": "auto",
+			"power_consumption": 57,
+			"default_duration": 525
+		},
+		{
+			"id": 3,
+			"name": "comfort",
+			"power_consumption": 101,
+			"default_duration": 2187
+		}
+	]
+}

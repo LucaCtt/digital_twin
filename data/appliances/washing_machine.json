@@ -1,0 +1,55 @@
+{
+	"id": 15,
+	"device": "washing machine",
+	"manufacturer": "Zanussi",
+	"model": "F1215",
+	"modes": [
+		{
+			"id": 0,
+			"name": "off",
+			"power_consumption": 0
+		},
+		{
+			"id": 1,
+			"name": "cotton 90",
+			"power_consumption": 2000,
+			"default_duration": 8700
+		},
+		{
+			"id": 2,
+			"name": "cotton 60e",
+			"power_consumption": 950,
+			"default_duration": 7680
+		},
+		{
+			"id": 3,
+			"name": "cotton 60",
+			"power_consumption": 1200,
+			"default_duration": 7200
+		},
+		{
+			"id": 4,
+			"name": "cotton 30",
+			"power_consumption": 550,
+			"default_duration": 6900
+		},
+		{
+			"id": 5,
+			"name": "synthetic 30",
+			"power_consumption": 900,
+			"default_duration": 5400
+		},
+		{
+			"id": 6,
+			"name": "delicate 30",
+			"power_consumption": 500,
+			"default_duration": 3600
+		},
+		{
+			"id": 7,
+			"name": "wool",
+			"power_consumption": 450,
+			"default_duration": 3300
+		}
+	]
+}

@@ -1,0 +1,49 @@
+{
+	"id": 3,
+	"device": "dish washer",
+	"manufacturer": "Whirlpool",
+	"model": "ADG 555 IX",
+	"modes": [
+		{
+			"id": 0,
+			"name": "off",
+			"power_consumption": 0
+		},
+		{
+			"id": 1,
+			"name": "intensive",
+			"power_consumption": 1400,
+			"default_duration": 10380
+		},
+		{
+			"id": 2,
+			"name": "daily",
+			"power_consumption": 810,
+			"default_duration": 10260
+		},
+		{
+			"id": 3,
+			"name": "eco",
+			"power_consumption": 700,
+			"default_duration": 6600
+		},
+		{
+			"id": 4,
+			"name": "express",
+			"power_consumption": 350,
+			"default_duration": 1680
+		},
+		{
+			"id": 5,
+			"name": "delicate",
+			"power_consumption": 800,
+			"default_duration": 7080
+		},
+		{
+			"id": 6,
+			"name": "pre-wash",
+			"power_consumption": 10,
+			"default_duration": 660
+		}
+	]
+}
