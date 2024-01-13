@@ -4,6 +4,7 @@ import os
 import const
 from models import Appliance, OperationMode, Routine, RoutineAction
 
+
 def __read_appliance(filepath: str) -> Appliance:
     with open(filepath) as file:
         data = json.load(file)
@@ -25,13 +26,13 @@ def __read_appliance(filepath: str) -> Appliance:
         return Appliance(id, device, modes)
 
 
-def __read_appliances() -> list[Appliance]:
+def __read_appliances(dir_path: str) -> list[Appliance]:
     appliances = []
 
-    for filename in os.listdir(const.APPLIANCES_DIR):
+    for filename in os.listdir(dir_path):
         if filename.endswith(".json"):
             appliance = __read_appliance(
-                os.path.join(const.APPLIANCES_DIR, filename))
+                os.path.join(dir_path, filename))
             appliances.append(appliance)
 
     return appliances
@@ -69,18 +70,19 @@ def __read_routine(filepath: str, appliances: list[Appliance]) -> Routine:
         return routine
 
 
-def __read_routines(appliances: list[Appliance]) -> list[Routine]:
+def __read_routines(dir_path: str, appliances: list[Appliance]) -> list[Routine]:
     routines = []
 
-    for filename in os.listdir(const.ROUTINES_DIR):
-        routine = __read_routine(os.path.join(
-            const.ROUTINES_DIR, filename), appliances)
+    for filename in os.listdir(dir_path):
+        routine = __read_routine(os.path.join(dir_path, filename), appliances)
         routines.append(routine)
 
     return routines
 
-def read_data() -> tuple[list[Appliance], list[Routine]]:
-    appliances = __read_appliances()
-    routines = __read_routines(appliances)
 
-    return appliances, routines
+def read_data() -> tuple[list[Appliance], list[Routine], list[Routine]]:
+    appliances = __read_appliances(const.APPLIANCES_DIR)
+    routines = __read_routines(const.ROUTINES_DIR, appliances)
+    tests = __read_routines(const.TESTS_DIR, appliances)
+
+    return appliances, routines, tests
