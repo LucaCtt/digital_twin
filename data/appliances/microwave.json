@@ -12,8 +12,7 @@
 		{
 			"id": 1,
 			"name": "stand-by",
-			"power_consumption": 5,
-			"default_duration": 1500
+			"power_consumption": 5
 		},
 		{
 			"id": 2,

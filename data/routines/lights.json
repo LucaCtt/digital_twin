@@ -1,0 +1,47 @@
+{
+    "id": 2,
+    "name": "Lavaggio",
+    "when": [
+        "Today",
+        "16:00"
+    ],
+    "enabled": true,
+    "actions": [
+        {
+            "id": 0,
+            "appliance_id": 5,
+            "mode_id": 1,
+            "duration": 25000
+        },
+        {
+            "id": 1,
+            "appliance_id": 6,
+            "mode_id": 1,
+            "duration": 25000
+        },
+        {
+            "id": 2,
+            "appliance_id": 7,
+            "mode_id": 1,
+            "duration": 25000
+        },
+        {
+            "id": 3,
+            "appliance_id": 8,
+            "mode_id": 1,
+            "duration": 25000
+        },
+        {
+            "id": 4,
+            "appliance_id": 9,
+            "mode_id": 1,
+            "duration": 25000
+        },
+        {
+            "id": 5,
+            "appliance_id": 10,
+            "mode_id": 1,
+            "duration": 25000
+        }
+    ]
+}

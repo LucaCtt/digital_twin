@@ -8,12 +8,12 @@
     "enabled": true,
     "actions": [
         {
-            "id": "1",
+            "id": 1,
             "appliance_id": 15,
             "mode_id": 4
         },
         {
-            "id": "2",
+            "id": 2,
             "appliance_id": 3,
             "mode_id": 2
         }
