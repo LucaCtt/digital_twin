@@ -1,9 +1,17 @@
+"""Repositories for the data of the digital twin.
+
+This module provides an abstract repository for the data of the digital twin,
+along with concrete implementations. Currently only a JSON repository is available,
+which reads the data from JSON files. It also provides low-level functions to read data from JSON files.
+"""
+
 from abc import ABC, abstractmethod
 from datetime import datetime
 import json
 import os
 
 from .models import Appliance, OperationMode, Routine, RoutineAction
+
 
 class DataRepository(ABC):
     """Abstract tepository for the data of the digital twin.
