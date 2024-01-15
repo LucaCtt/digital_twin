@@ -5,14 +5,25 @@ import os
 
 from .models import Appliance, OperationMode, Routine, RoutineAction
 
-
 class DataRepository(ABC):
     """Abstract tepository for the data of the digital twin.
     Do not instantiantiate this class directly. Use a concrete implementation instead.
     Only `get` methods are defined because the app is not meant to create or modify data.
     """
+
+    def get_appliance(self, appliance_id: int) -> Appliance | None:
+        """Get an appliance by its ID.
+
+        Args:
+            appliance_id (int): The ID of the appliance.
+
+        Returns:
+            Appliance | None: The appliance, or None if not found.
+        """
+        return next((appliance for appliance in self.get_appliances() if appliance.id == appliance_id), None)
+
     @abstractmethod
-    def get_appliances() -> list[Appliance]:
+    def get_appliances(self) -> list[Appliance]:
         """Get the list of appliances.
 
         Returns:
@@ -20,8 +31,19 @@ class DataRepository(ABC):
         """
         pass
 
+    def get_routine(self, routine_id: int) -> Routine | None:
+        """Get a routine by its ID.
+
+        Args:
+            routine_id (int): The ID of the routine.
+
+        Returns:
+            Routine | None: The routine, or None if not found.
+        """
+        return next((routine for routine in self.get_routines() if routine.id == routine_id), None)
+
     @abstractmethod
-    def get_routines() -> list[Routine]:
+    def get_routines(self) -> list[Routine]:
         """Get the list of routines.
 
         Returns:
@@ -30,7 +52,7 @@ class DataRepository(ABC):
         pass
 
     @abstractmethod
-    def get_test_routines() -> list[Routine]:
+    def get_test_routines(self) -> list[Routine]:
         """Get the list of test routines.
 
         Returns:
@@ -61,7 +83,7 @@ class JSONRepository(DataRepository):
         Returns:
             list[Appliance]: The list of appliances.
         """
-        return __read_appliances_json(self.appliances_dir)
+        return read_appliances_json(self.appliances_dir)
 
     def get_routines(self) -> list[Routine]:
         """Get the list of routines.
@@ -70,7 +92,7 @@ class JSONRepository(DataRepository):
             list[Routine]: The list of routines.
         """
         appliances = self.get_appliances()
-        routines = __read_routines_json(self.routines_dir, appliances)
+        routines = read_routines_json(self.routines_dir, appliances)
         return routines
 
     def get_test_routines(self) -> list[Routine]:
@@ -80,12 +102,12 @@ class JSONRepository(DataRepository):
             list[Routine]: The list of test routines.
         """
         appliances = self.get_appliances()
-        test_routines = __read_routines_json(
+        test_routines = read_routines_json(
             self.test_routines_dir, appliances)
         return test_routines
 
 
-def __read_appliance_json(filepath: str) -> Appliance:
+def read_appliance_json(filepath: str) -> Appliance:
     """Read an appliance from a JSON file.
 
     Args:
@@ -114,7 +136,7 @@ def __read_appliance_json(filepath: str) -> Appliance:
         return Appliance(id, device, modes)
 
 
-def __read_appliances_json(dir_path: str) -> list[Appliance]:
+def read_appliances_json(dir_path: str) -> list[Appliance]:
     """Read the appliances from a directory containing JSON files.
 
     Args:
@@ -127,14 +149,14 @@ def __read_appliances_json(dir_path: str) -> list[Appliance]:
 
     for filename in os.listdir(dir_path):
         if filename.endswith(".json"):
-            appliance = __read_appliance_json(
+            appliance = read_appliance_json(
                 os.path.join(dir_path, filename))
             appliances.append(appliance)
 
     return appliances
 
 
-def __read_routine_json(filepath: str, appliances: list[Appliance]) -> Routine:
+def read_routine_json(filepath: str, appliances: list[Appliance]) -> Routine:
     """Read a routine from a JSON file.
 
     Args:
@@ -175,7 +197,7 @@ def __read_routine_json(filepath: str, appliances: list[Appliance]) -> Routine:
         return routine
 
 
-def __read_routines_json(dir_path: str, appliances: list[Appliance]) -> list[Routine]:
+def read_routines_json(dir_path: str, appliances: list[Appliance]) -> list[Routine]:
     """Read the routines from a directory containing JSON files.
 
     Args:
@@ -189,7 +211,7 @@ def __read_routines_json(dir_path: str, appliances: list[Appliance]) -> list[Rou
     routines = []
 
     for filename in os.listdir(dir_path):
-        routine = __read_routine_json(
+        routine = read_routine_json(
             os.path.join(dir_path, filename), appliances)
         routines.append(routine)
 

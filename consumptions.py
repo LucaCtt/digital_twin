@@ -2,8 +2,8 @@ from __future__ import annotations
 from datetime import datetime
 import numpy as np
 
-from .const import MINUTES_IN_DAY
-from .data import Appliance, Routine
+from const import MINUTES_IN_DAY
+from data import Appliance, Routine
 
 
 class ConsumptionsMatrix():
@@ -92,3 +92,11 @@ class ConsumptionsMatrix():
         minute_of_day = when.hour * 60 + when.minute
         mode_id = self.matrix[minute_of_day][appliance.id]
         return appliance.modes[mode_id].power_consumption
+
+    def raw_matrix(self) -> np.ndarray:
+        """Return the raw matrix.
+
+        Returns:
+            np.ndarray: The raw matrix.
+        """
+        return self.matrix
