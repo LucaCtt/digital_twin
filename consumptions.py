@@ -43,7 +43,7 @@ class ConsumptionsMatrix():
                 for minute in range(start, end+1):
                     self.matrix[minute-1][action.appliance.id] = action.mode.id
 
-    def simulate(self, new_routines: list[Routine]) -> ConsumptionsMatrix:
+    def simulate(self, new_routine: Routine) -> ConsumptionsMatrix:
         """Simulate a new matrix with a new set of routines to be added to the existing ones.
 
         Args:
@@ -52,7 +52,7 @@ class ConsumptionsMatrix():
         Returns:
             ConsumptionsMatrix: The new matrix, with the new routines added to the existing ones.
         """
-        return ConsumptionsMatrix(self.appliances, self.routines + new_routines)
+        return ConsumptionsMatrix(self.appliances, self.routines + [new_routine])
 
     def total_consumption(self, when: datetime) -> float:
         """Calculate the total consumption of the house at a given time.

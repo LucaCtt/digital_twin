@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from pydantic import BaseModel
 
 
-class OperationModeBase(BaseModel):
+class OperationModeOut(BaseModel):
     """The schema for an operation mode.
     """
 
@@ -27,26 +27,26 @@ class OperationModeBase(BaseModel):
         from_attributes = True
 
 
-class ApplianceBase(BaseModel):
+class ApplianceOut(BaseModel):
     """The schema for an appliance.
     """
 
     id: int
     device: str
-    modes: list[OperationModeBase]
+    modes: list[OperationModeOut]
 
     # Enable creating an instance of this schema from a model.
     class Config:
         from_attributes = True
 
 
-class RoutineActionBase(BaseModel):
+class RoutineActionOut(BaseModel):
     """The schema for a routine action.
     """
 
     id: int
-    appliance: ApplianceBase
-    mode: OperationModeBase
+    appliance: ApplianceOut
+    mode: OperationModeOut
     duration: int | None = None
 
     # Enable creating an instance of this schema from a model.
@@ -54,16 +54,36 @@ class RoutineActionBase(BaseModel):
         from_attributes = True
 
 
-class RoutineBase(BaseModel):
+class RoutineOut(BaseModel):
     """The schema for a routine action.
     """
 
     id: int
     name: str
     when: datetime
-    actions: list[RoutineActionBase]
+    actions: list[RoutineActionOut]
     enabled: bool = True
 
     # Enable creating an instance of this schema from a model.
     class Config:
         from_attributes = True
+
+
+class RoutineActionIn(BaseModel):
+    """The schema for an input routine action.
+    """
+
+    id: int
+    appliance_id: int
+    mode_id: int
+    duration: int | None = None
+
+
+class RoutineIn(BaseModel):
+    """The schema for an input routine.
+    """
+
+    name: str
+    when: datetime
+    actions: list[RoutineActionIn]
+    enabled: bool = True

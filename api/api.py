@@ -1,13 +1,18 @@
-from datetime import datetime
-from fastapi import FastAPI, HTTPException
-from data import DataRepository
-from consumptions import ConsumptionsMatrix
-from .schemas import ApplianceBase, RoutineBase
+"""API module for the Digital Twin.
 
-ERR_APPLIANCE_NOT_FOUND = HTTPException(
-    status_code=404, detail="Appliance not found")
-ERR_ROUTINE_NOT_FOUND = HTTPException(
-    status_code=404, detail="Routine not found")
+This module provides the REST API for the Digital Twin, implemented using [FastAPI](https://fastapi.tiangolo.com/).
+"""
+
+from datetime import datetime
+from fastapi import FastAPI
+from data import DataRepository, Routine, RoutineAction
+from consumptions import ConsumptionsMatrix
+from . import errors
+from .schemas import ApplianceOut, RoutineOut, RoutineIn
+
+__CONSUMPTION_TAG = "Consumption"
+__APPLIANCE_TAG = "Appliance"
+__ROUTINE_TAG = "Routine"
 
 
 def create_api(repository: DataRepository, matrix: ConsumptionsMatrix, title="Digital Twin API", version: str = "1.0.0") -> FastAPI:
@@ -24,11 +29,6 @@ def create_api(repository: DataRepository, matrix: ConsumptionsMatrix, title="Di
         version (str, optional): The API version. Defaults to "1.0.0". Remember to update this value when you make changes to the API.
         Please follow the [Semantic Versioning](https://semver.org/) guidelines.
 
-    Raises:
-        ERR_APPLIANCE_NOT_FOUND: _description_
-        ERR_APPLIANCE_NOT_FOUND: _description_
-        ERR_ROUTINE_NOT_FOUND: _description_
-
     Returns:
         FastAPI: The FastAPI instance.
     """
@@ -36,62 +36,132 @@ def create_api(repository: DataRepository, matrix: ConsumptionsMatrix, title="Di
     api = FastAPI(
         title=title,
         version=version,
+        docs_url="/",
+        redoc_url=None
     )
 
-    @api.get("/consumption/{when}")
-    async def consumption_total(when: datetime) -> float:
-        """Get the total consumption of all appliances at a given date and time.
+    @api.get("/consumption/{when}", tags=[__CONSUMPTION_TAG])
+    async def get_consumption_total(when: datetime) -> float:
+        """Get the total consumption at a given date and time.
+
+        **Args**:
+        - `when (datetime)`: The date and time.
+
+        **Returns**:
+        - `float`: The total consumption at the given date and time, in watts.
         """
+
         return matrix.total_consumption(when)
 
-    @api.get("/consumption/{appliance_id}/{when}")
-    async def appliance_consumption(appliance_id: int, when: datetime) -> float:
-        """Get the consumption of a given appliance at a given date and time.
+    @api.post("/consumption/{when}", tags=[__CONSUMPTION_TAG])
+    async def post_consumption_total(when: datetime, routine_in: RoutineIn) -> float:
+        return matrix.simulate(__routine_schema_to_model(routine_in, repository)).total_consumption(when)
+
+    @api.get("/consumption/{appliance_id}/{when}", tags=[__CONSUMPTION_TAG])
+    async def get_appliance_consumption(appliance_id: int, when: datetime) -> float:
+        """Get the consumption of an appliance at a given date and time.
+
+        **Args**:
+        - `appliance_id (int)`: The appliance ID.
+        - `when (datetime)`: The date and time.
+
+        **Returns**:
+        - `float`: The consumption of the appliance at the given date and time, in watts.
         """
+
         appliance = repository.get_appliance(appliance_id)
 
         if appliance is None:
-            raise ERR_APPLIANCE_NOT_FOUND
+            raise errors.APPLIANCE_NOT_FOUND
 
         return matrix.consumption(appliance, when)
 
-    @api.get("/appliances/{appliance_id}")
-    async def get_appliance(appliance_id: int) -> ApplianceBase:
+    @api.post("/consumption/{appliance_id}/{when}", tags=[__CONSUMPTION_TAG])
+    async def post_appliance_consumption(appliance_id: int, when: datetime, routine_in: RoutineIn) -> float:
+        appliance = repository.get_appliance(appliance_id)
+
+        if appliance is None:
+            raise errors.APPLIANCE_NOT_FOUND
+
+        return matrix.simulate(__routine_schema_to_model(routine_in, repository)).consumption(appliance, when)
+
+    @api.get("/appliance/{appliance_id}", tags=[__APPLIANCE_TAG])
+    async def get_appliance(appliance_id: int) -> ApplianceOut:
         """Get an appliance by ID.
+
+        **Args**:
+        - `appliance_id (int)`: The appliance ID.
+
+        **Returns**:
+        - `ApplianceOut`: The appliance.
         """
 
         appliance = repository.get_appliance(appliance_id)
 
         if appliance is None:
-            raise ERR_APPLIANCE_NOT_FOUND
+            raise errors.APPLIANCE_NOT_FOUND
 
-        return ApplianceBase.model_validate(appliance)
+        return ApplianceOut.model_validate(appliance)
 
-    @api.get("/appliances")
-    async def get_appliances() -> list[ApplianceBase]:
+    @api.get("/appliance", tags=[__APPLIANCE_TAG])
+    async def get_appliances() -> list[ApplianceOut]:
         """Get all appliances.
-        """
-        return [ApplianceBase.model_validate(a) for a in repository.get_appliances()]
 
-    @api.get("/routines/{routine_id}")
-    async def get_routine(routine_id: int) -> RoutineBase:
-        """Get a routine by ID.
+        **Returns**:
+        - `list[ApplianceOut]`: The appliances.
         """
+
+        return [ApplianceOut.model_validate(a) for a in repository.get_appliances()]
+
+    @api.get("/routine/{routine_id}", tags=[__ROUTINE_TAG])
+    async def get_routine(routine_id: int) -> RoutineOut:
+        """Get a routine by ID.
+
+        **Args**:
+        - `routine_id (int)`: The routine ID.
+
+        **Returns**:
+        - `RoutineOut`: The routine.
+        """
+
         routine = repository.get_routine(routine_id)
 
         if routine is None:
-            raise ERR_ROUTINE_NOT_FOUND
+            raise errors.ROUTINE_NOT_FOUND
 
-        return RoutineBase.model_validate(routine)
+        return RoutineOut.model_validate(routine)
 
-    @api.get("/routines")
-    async def get_routines() -> list[RoutineBase]:
+    @api.get("/routine", tags=[__ROUTINE_TAG])
+    async def get_routines() -> list[RoutineOut]:
         """Get all routines.
-        """
-        return [RoutineBase.model_validate(r) for r in repository.get_routines()]
 
-    @api.post("/simulate")
-    async def simulate(routine: RoutineBase) -> list[str]:
-        return []
+        **Returns**:
+        - `list[RoutineOut]`: The routines.
+        """
+
+        return [RoutineOut.model_validate(r) for r in repository.get_routines()]
 
     return api
+
+
+def __routine_schema_to_model(routine_in: RoutineIn, repository: DataRepository) -> Routine:
+    actions = []
+
+    for action_in in routine_in.actions:
+        appliance = repository.get_appliance(action_in.appliance_id)
+        if appliance is None:
+            raise errors.APPLIANCE_INVALID
+
+        mode = appliance.get_mode(action_in.mode_id)
+        if mode is None:
+            raise errors.APPLIANCE_INVALID
+
+        action_dict = vars(action_in)
+        action_dict["appliance"] = appliance
+        action_dict["mode"] = mode
+
+        actions.append(RoutineAction(**action_dict))
+
+    routine_dict = vars(routine_in)
+    routine_dict["actions"] = actions
+    return Routine(**routine_dict)

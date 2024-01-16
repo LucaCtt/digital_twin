@@ -44,6 +44,17 @@ class Appliance:
         self.device = device
         self.modes = modes
 
+    def get_mode(self, mode_id: int) -> OperationMode | None:
+        """Get an operation mode of the appliance by ID.
+
+        Args:
+            mode_id (int): The ID of the operation mode.
+
+        Returns:
+            OperationMode | None: The operation mode if found, None otherwise.
+        """
+        return next((mode for mode in self.modes if mode.id == mode_id), None)
+
 
 class RoutineAction:
     """An action of a routine.

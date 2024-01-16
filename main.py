@@ -8,4 +8,4 @@ repository = JSONRepository(
 matrix = ConsumptionsMatrix(
     repository.get_appliances(), repository.get_routines())
 
-app = create_api(repository, matrix, version="1.0.0")
+api = create_api(repository, matrix, version="1.0.0")
