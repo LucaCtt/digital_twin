@@ -3,7 +3,7 @@ import matplotlib.cm as cm
 from matplotlib import patheffects
 import numpy as np
 
-from .consumptions import consumptions_matrix
+from .consumptions import ConsumptionsMatrix
 from .data import Appliance, Routine
 from .const import MINUTES_IN_DAY
 
@@ -18,7 +18,7 @@ def __prepare_matrix_figure(appliances: list[Appliance], routines: list[Routine]
     appliances_names = [a.device.title() for a in sorted_appliances]
     hours_in_day = [f"{h:02d}:00" for h in range(0, 24)]
 
-    matrix = consumptions_matrix(appliances, routines)
+    matrix = ConsumptionsMatrix(appliances, routines).raw_matrix()
     matrix_masked = np.ma.masked_where(matrix == 0, matrix)
 
     c_map = cm.get_cmap('tab10')
@@ -77,7 +77,6 @@ def plot_consumptions_matrix(appliances: list[Appliance], routines: list[Routine
 
 
 def plot_simulated_matrix(appliances: list[Appliance], routines: list[Routine], test_routines: list[Routine]):
-
     __prepare_matrix_figure(appliances, routines, "Real")
     __prepare_matrix_figure(appliances, routines + test_routines, "Simulated")
 

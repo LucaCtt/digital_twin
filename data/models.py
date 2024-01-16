@@ -39,7 +39,7 @@ class Appliance:
         An "off" mode is required, and it's a good practice to have it as the first one in the list.
     """
 
-    def __init__(self, id: str, device: str, modes: list[OperationMode]):
+    def __init__(self, id: int, device: str, modes: list[OperationMode]):
         self.id = id
         self.device = device
         self.modes = modes
