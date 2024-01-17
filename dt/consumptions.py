@@ -2,8 +2,8 @@ from __future__ import annotations
 from datetime import datetime
 import numpy as np
 
-from const import MINUTES_IN_DAY
-from data import Appliance, Routine
+from dt.const import MINUTES_IN_DAY
+from dt.data import Appliance, Routine
 
 
 class ConsumptionsMatrix():

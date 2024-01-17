@@ -1,7 +1,7 @@
-from api import create_api
-from consumptions import ConsumptionsMatrix
-from data import JSONRepository
-import const
+from dt.api import create_api
+from dt.consumptions import ConsumptionsMatrix
+from dt.data import JSONRepository
+from dt import const
 
 repository = JSONRepository(
     const.APPLIANCES_DIR, const.ROUTINES_DIR, const.TEST_ROUTINES_DIR)

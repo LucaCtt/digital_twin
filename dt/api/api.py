@@ -5,8 +5,9 @@ This module provides the REST API for the Digital Twin, implemented using [FastA
 
 from datetime import datetime
 from fastapi import FastAPI
-from data import DataRepository, Routine, RoutineAction
-from consumptions import ConsumptionsMatrix
+
+from dt.data import DataRepository, Routine, RoutineAction
+from dt.consumptions import ConsumptionsMatrix
 from . import errors
 from .schemas import ApplianceOut, RoutineOut, RoutineIn
 
