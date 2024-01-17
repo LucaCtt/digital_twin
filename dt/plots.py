@@ -3,9 +3,9 @@ import matplotlib.cm as cm
 from matplotlib import patheffects
 import numpy as np
 
-from dt.consumptions import ConsumptionsMatrix
-from dt.data import Appliance, Routine
-from dt.const import MINUTES_IN_DAY
+from consumptions import ConsumptionsMatrix
+from data import Appliance, Routine, DataRepository
+from const import MINUTES_IN_DAY
 
 plt.rcParams['axes.labelsize'] = "medium"
 plt.rcParams['font.size'] = 11
@@ -18,8 +18,8 @@ def __prepare_matrix_figure(appliances: list[Appliance], routines: list[Routine]
     appliances_names = [a.device.title() for a in sorted_appliances]
     hours_in_day = [f"{h:02d}:00" for h in range(0, 24)]
 
-    matrix = ConsumptionsMatrix(appliances, routines).raw_matrix()
-    matrix_masked = np.ma.masked_where(matrix == 0, matrix)
+    matrix_raw = ConsumptionsMatrix(appliances, routines).raw_matrix()
+    matrix_masked = np.ma.masked_where(matrix_raw == 0, matrix_raw)
 
     c_map = cm.get_cmap('tab10')
     c_map.set_bad('whitesmoke')
@@ -28,7 +28,7 @@ def __prepare_matrix_figure(appliances: list[Appliance], routines: list[Routine]
     plt.matshow(matrix_masked, fignum=plt.gcf().number,  # type: ignore
                 aspect="auto", cmap=c_map)
 
-    for appliance_id, column in enumerate(matrix.T):
+    for appliance_id, column in enumerate(matrix_raw.T):
         sequences = []
         start = -1
         end = -1
@@ -70,14 +70,17 @@ def __prepare_matrix_figure(appliances: list[Appliance], routines: list[Routine]
     plt.tight_layout()
 
 
-def plot_consumptions_matrix(appliances: list[Appliance], routines: list[Routine]):
-    __prepare_matrix_figure(appliances, routines)
+def plot_consumptions_matrix(repository: DataRepository):
+    __prepare_matrix_figure(repository.get_appliances(),
+                            repository.get_routines())
 
     plt.show()
 
 
-def plot_simulated_matrix(appliances: list[Appliance], routines: list[Routine], test_routines: list[Routine]):
-    __prepare_matrix_figure(appliances, routines, "Real")
-    __prepare_matrix_figure(appliances, routines + test_routines, "Simulated")
+def plot_simulated_matrix(repository: DataRepository):
+    __prepare_matrix_figure(repository.get_appliances(),
+                            repository.get_routines(), "Real")
+    __prepare_matrix_figure(
+        repository.get_appliances(), repository.get_routines() + repository.get_test_routines(), "Simulated")
 
     plt.show()
