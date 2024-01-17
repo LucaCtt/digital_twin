@@ -14,7 +14,7 @@ repository = JSONRepository(
 
 
 @app.command()
-def plot(simulate: bool = False):
+def map(simulate: bool = False):
     if simulate:
         plot_simulated_matrix(repository)
     else:
