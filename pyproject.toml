@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "dt"
+version = "1.0.0"
+description = "A smart home digital twin"
+authors = ["Luca Cotti <lucacotti@outlook.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+numpy = "^1.26.3"
+fastapi = "^0.109.0"
+matplotlib = "^3.8.2"
+uvicorn = "^0.26.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
