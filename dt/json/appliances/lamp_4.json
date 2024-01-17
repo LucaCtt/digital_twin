@@ -3,6 +3,7 @@
 	"device": "lamp",
 	"manufacturer": "",
 	"model": "",
+	"location": "kitchen",
 	"modes": [
 		{
 			"id": 0,

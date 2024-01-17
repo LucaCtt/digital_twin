@@ -3,6 +3,7 @@
 	"device": "dish washer",
 	"manufacturer": "Whirlpool",
 	"model": "ADG 555 IX",
+	"location": "bathroom",
 	"modes": [
 		{
 			"id": 0,

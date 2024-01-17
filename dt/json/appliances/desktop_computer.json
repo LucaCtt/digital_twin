@@ -3,6 +3,7 @@
 	"device": "desktop computer",
 	"manufacturer": "dimotionPC",
 	"model": "QuiteONE Q2",
+	"location": "bedroom 1",
 	"modes": [
 		{
 			"id": 0,

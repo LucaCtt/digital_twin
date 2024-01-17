@@ -3,6 +3,7 @@
 	"device": "lamp",
 	"manufacturer": "",
 	"model": "",
+	"location": "bedroom 1",
 	"modes": [
 		{
 			"id": 0,

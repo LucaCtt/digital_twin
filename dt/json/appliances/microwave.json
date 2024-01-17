@@ -3,6 +3,7 @@
 	"device": "microwave",
 	"manufacturer": "Whirpool",
 	"model": "AMW 494/IX",
+	"location": "kitchen",
 	"modes": [
 		{
 			"id": 0,

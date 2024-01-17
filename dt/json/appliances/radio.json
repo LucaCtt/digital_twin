@@ -3,6 +3,7 @@
 	"device": "radio",
 	"manufacturer": "Denon",
 	"model": "DRA-275RD",
+	"location": "living room",
 	"modes": [
 		{
 			"id": 0,

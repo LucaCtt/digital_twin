@@ -3,6 +3,7 @@
 	"device": "lamp",
 	"manufacturer": "",
 	"model": "",
+	"location": "corridor",
 	"modes": [
 		{
 			"id": 0,

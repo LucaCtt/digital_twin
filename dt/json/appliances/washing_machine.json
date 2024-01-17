@@ -3,6 +3,7 @@
 	"device": "washing machine",
 	"manufacturer": "Zanussi",
 	"model": "F1215",
+	"location": "bathroom",
 	"modes": [
 		{
 			"id": 0,

@@ -3,6 +3,7 @@
 	"device": "air conditioning",
 	"manufacturer": "",
 	"model": "",
+	"location": "",
 	"modes": [
 		{
 			"id": 0,

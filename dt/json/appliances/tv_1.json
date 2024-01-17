@@ -1,8 +1,9 @@
 {
-	"id": 13,
+	"id": 14,
 	"device": "television",
 	"manufacturer": "Samsung",
 	"model": "LE32C650",
+	"location": "living room",
 	"modes": [
 		{
 			"id": 0,
