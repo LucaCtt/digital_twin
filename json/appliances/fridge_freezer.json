@@ -3,6 +3,7 @@
 	"device": "fridge freezer",
 	"manufacturer": "Siemens",
 	"model": "",
+	"location": "kitchen",
 	"modes": [
 		{
 			"id": 0,

@@ -1,0 +1,11 @@
+[home]
+max_power_kw = 3 # Maximum power draw, in kW
+energy_rates_number = 2 # Number of energy rates, e.g. 2 means dual-rate
+energy_rate_prices = [0.15, 0.20] # Price for each energy rate, in €/kWh
+
+
+[database]
+type = "json"
+appliances_dir = "json/appliances"
+routines_dir = "json/routines"
+test_routines_dir = "json/test_routines"
