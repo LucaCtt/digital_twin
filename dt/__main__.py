@@ -30,8 +30,8 @@ def map(simulate: bool = False):
 
 
 @app.command()
-def start_api():
-    api = create_api(repository)
+def start_api(frontend: bool = False):
+    api = create_api(repository, serve_static=frontend)
     uvicorn.run(api)
 
 

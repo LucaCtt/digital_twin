@@ -4,7 +4,9 @@ This module provides the REST API for the Digital Twin, implemented using [FastA
 """
 
 from datetime import datetime
+import os
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from data import DataRepository, Routine, RoutineAction
 from consumptions import ConsumptionsMatrix
@@ -16,7 +18,7 @@ __APPLIANCE_TAG = "Appliance"
 __ROUTINE_TAG = "Routine"
 
 
-def create_api(repository: DataRepository, title="Digital Twin API", version: str = "1.0.0") -> FastAPI:
+def create_api(repository: DataRepository, serve_static=False, title="Digital Twin API", version: str = "1.0.0") -> FastAPI:
     """Create a FastAPI instance.
 
     Create a new FastAPI instance, using the given data repository and
@@ -33,16 +35,21 @@ def create_api(repository: DataRepository, title="Digital Twin API", version: st
         FastAPI: The FastAPI instance.
     """
 
-    matrix = ConsumptionsMatrix(repository.get_appliances(), repository.get_routines())
+    matrix = ConsumptionsMatrix(
+        repository.get_appliances(), repository.get_routines())
 
     api = FastAPI(
         title=title,
         version=version,
-        docs_url="/",
+        docs_url="/api",
         redoc_url=None
     )
 
-    @api.get("/consumption/{when}", tags=[__CONSUMPTION_TAG])
+    if serve_static:
+        api.mount("/", StaticFiles(directory=os.path.dirname(__file__) +
+                  "/static", html=True), name="static")
+
+    @api.get("/api/consumption/{when}", tags=[__CONSUMPTION_TAG])
     async def get_consumption_total(when: datetime) -> float:
         """Get the total consumption at a given date and time.
 
@@ -55,11 +62,11 @@ def create_api(repository: DataRepository, title="Digital Twin API", version: st
 
         return matrix.total_consumption(when)
 
-    @api.post("/consumption/{when}", tags=[__CONSUMPTION_TAG])
+    @api.post("/api/consumption/{when}", tags=[__CONSUMPTION_TAG])
     async def post_consumption_total(when: datetime, routine_in: RoutineIn) -> float:
         return matrix.simulate(__routine_schema_to_model(routine_in, repository)).total_consumption(when)
 
-    @api.get("/consumption/{appliance_id}/{when}", tags=[__CONSUMPTION_TAG])
+    @api.get("/api/consumption/{appliance_id}/{when}", tags=[__CONSUMPTION_TAG])
     async def get_appliance_consumption(appliance_id: int, when: datetime) -> float:
         """Get the consumption of an appliance at a given date and time.
 
@@ -78,7 +85,7 @@ def create_api(repository: DataRepository, title="Digital Twin API", version: st
 
         return matrix.consumption(appliance, when)
 
-    @api.post("/consumption/{appliance_id}/{when}", tags=[__CONSUMPTION_TAG])
+    @api.post("/api/consumption/{appliance_id}/{when}", tags=[__CONSUMPTION_TAG])
     async def post_appliance_consumption(appliance_id: int, when: datetime, routine_in: RoutineIn) -> float:
         appliance = repository.get_appliance(appliance_id)
 
@@ -87,7 +94,7 @@ def create_api(repository: DataRepository, title="Digital Twin API", version: st
 
         return matrix.simulate(__routine_schema_to_model(routine_in, repository)).consumption(appliance, when)
 
-    @api.get("/appliance/{appliance_id}", tags=[__APPLIANCE_TAG])
+    @api.get("/api/appliance/{appliance_id}", tags=[__APPLIANCE_TAG])
     async def get_appliance(appliance_id: int) -> ApplianceOut:
         """Get an appliance by ID.
 
@@ -105,7 +112,7 @@ def create_api(repository: DataRepository, title="Digital Twin API", version: st
 
         return ApplianceOut.model_validate(appliance)
 
-    @api.get("/appliance", tags=[__APPLIANCE_TAG])
+    @api.get("/api/appliance", tags=[__APPLIANCE_TAG])
     async def get_appliances() -> list[ApplianceOut]:
         """Get all appliances.
 
@@ -115,7 +122,7 @@ def create_api(repository: DataRepository, title="Digital Twin API", version: st
 
         return [ApplianceOut.model_validate(a) for a in repository.get_appliances()]
 
-    @api.get("/routine/{routine_id}", tags=[__ROUTINE_TAG])
+    @api.get("/api/routine/{routine_id}", tags=[__ROUTINE_TAG])
     async def get_routine(routine_id: int) -> RoutineOut:
         """Get a routine by ID.
 
@@ -133,7 +140,7 @@ def create_api(repository: DataRepository, title="Digital Twin API", version: st
 
         return RoutineOut.model_validate(routine)
 
-    @api.get("/routine", tags=[__ROUTINE_TAG])
+    @api.get("/api/routine", tags=[__ROUTINE_TAG])
     async def get_routines() -> list[RoutineOut]:
         """Get all routines.
 
