@@ -18,7 +18,7 @@ __APPLIANCE_TAG = "Appliance"
 __ROUTINE_TAG = "Routine"
 
 
-def create_api(repository: DataRepository, serve_static=False, title="Digital Twin API", version: str = "1.0.0") -> FastAPI:
+def create_api(repository: DataRepository, serve_static=False, serve_dir="static", title="Digital Twin API", version: str = "1.0.0") -> FastAPI:
     """Create a FastAPI instance.
 
     Create a new FastAPI instance, using the given data repository and
@@ -46,8 +46,8 @@ def create_api(repository: DataRepository, serve_static=False, title="Digital Tw
     )
 
     if serve_static:
-        api.mount("/", StaticFiles(directory=os.path.dirname(__file__) +
-                  "/static", html=True), name="static")
+        api.mount("/", StaticFiles(directory=serve_dir,
+                  html=True), name="static")
 
     @api.get("/api/consumption/{when}", tags=[__CONSUMPTION_TAG])
     async def get_consumption_total(when: datetime) -> float:

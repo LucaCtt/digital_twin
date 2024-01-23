@@ -1,19 +1,14 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <title>Digital Twin Showcase</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.css"
-      rel="stylesheet"
-    />
+    <link href="./index.css" rel="stylesheet">
 
-    <script
-      defer
-      src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.js"
-    ></script>
-    <script defer src="/index.js"></script>
+    <script defer src="../node_modules/flowbite/dist/flowbite.min.js"></script>
+    <script defer src="./index.js"></script>
 
     <script>
       // Load theme from localStorage on page load
@@ -30,18 +25,18 @@
   </head>
 
   <body
-    class="pt-8 pb-16 lg:pt-16 lg:pb-24 bg-white dark:bg-gray-900 flex flex-col justify-between gap-8 px-4 mx-auto max-w-screen-xl"
+    class="mx-auto flex max-w-screen-xl flex-col justify-between gap-8 bg-white px-4 pb-16 pt-8 dark:bg-gray-900 lg:pb-24 lg:pt-16"
   >
     <!-- Header -->
     <header
-      class="flex flex-row justify-between items-center p-4 w-full bg-green-100 rounded-lg dark:border-gray-700 dark:bg-green-900"
+      class="flex w-full flex-row items-center justify-between rounded-lg bg-green-100 p-4 dark:border-gray-700 dark:bg-green-900"
     >
       <div
-        class="flex flex-row items-center justify-between p-4 leading-normal gap-8"
+        class="flex flex-row items-center justify-between gap-8 p-4 leading-normal"
       >
         <!-- Website icon -->
         <svg
-          class="w-14 h-14 text-green-700 dark:text-green-300 border-2 border-green-700 dark:border-green-300 rounded-full p-2"
+          class="h-14 w-14 rounded-full border-2 border-green-700 p-2 text-green-700 dark:border-green-300 dark:text-green-300"
           aria-hidden="true"
           xmlns="http://www.w3.org/2000/svg"
           fill="currentColor"
@@ -59,18 +54,18 @@
       </div>
 
       <!-- Actions -->
-      <div class="flex flex-row gap-2 items-center">
+      <div class="flex flex-row items-center gap-2">
         <!-- Theme toggle -->
         <button
           id="theme-toggle"
           type="button"
           data-tooltip-target="tooltip-theme"
-          class="dark:text-white hover:bg-green-200 dark:hover:bg-green-800 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-700 rounded-full text-sm p-2.5"
+          class="rounded-full p-2.5 text-sm hover:bg-green-200 focus:outline-none focus:ring-4 focus:ring-green-300 dark:text-white dark:hover:bg-green-800 dark:focus:ring-green-700"
         >
           <!-- Dark icon -->
           <svg
             id="theme-toggle-dark-icon"
-            class="hidden w-5 h-5"
+            class="hidden h-5 w-5"
             fill="currentColor"
             viewBox="0 0 20 20"
             xmlns="http://www.w3.org/2000/svg"
@@ -83,7 +78,7 @@
           <!-- Light icon -->
           <svg
             id="theme-toggle-light-icon"
-            class="hidden w-5 h-5"
+            class="hidden h-5 w-5"
             fill="currentColor"
             viewBox="0 0 20 20"
             xmlns="http://www.w3.org/2000/svg"
@@ -99,7 +94,7 @@
         <div
           id="tooltip-theme"
           role="tooltip"
-          class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700"
+          class="tooltip invisible absolute z-10 inline-block rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white opacity-0 shadow-sm transition-opacity duration-300 dark:bg-gray-700"
         >
           Toggle dark mode
           <div class="tooltip-arrow" data-popper-arrow></div>
@@ -111,10 +106,10 @@
           id="goto-api"
           type="button"
           data-tooltip-target="tooltip-api"
-          class="dark:text-white hover:bg-green-200 dark:hover:bg-green-800 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-700 rounded-full text-sm p-2.5"
+          class="rounded-full p-2.5 text-sm hover:bg-green-200 focus:outline-none focus:ring-4 focus:ring-green-300 dark:text-white dark:hover:bg-green-800 dark:focus:ring-green-700"
         >
           <svg
-            class="w-6 h-6"
+            class="h-6 w-6"
             fill="currentColor"
             aria-hidden="true"
             xmlns="http://www.w3.org/2000/svg"
@@ -132,7 +127,7 @@
         <div
           id="tooltip-api"
           role="tooltip"
-          class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700"
+          class="tooltip invisible absolute z-10 inline-block rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white opacity-0 shadow-sm transition-opacity duration-300 dark:bg-gray-700"
         >
           Go to API docs
           <div class="tooltip-arrow" data-popper-arrow></div>
@@ -144,21 +139,21 @@
     <main class="w-full">
       <!-- Simulate Routines -->
       <div
-        class="flex flex-col justify-start bg-gray-100 dark:bg-gray-800 p-4 rounded-lg"
+        class="flex flex-col justify-start rounded-lg bg-gray-100 p-4 dark:bg-gray-800"
       >
         <h2 class="m-4 shrink-0 text-2xl font-extrabold dark:text-white">
           Simulate Routines
         </h2>
 
         <ul
-          class="flex flex-wrap text-sm font-medium text-center mb-4 border-b border-gray-200 dark:border-gray-700"
+          class="mb-4 flex flex-wrap border-b border-gray-200 text-center text-sm font-medium dark:border-gray-700"
           id="default-tab"
           data-tabs-toggle="#default-tab-content"
           role="tablist"
         >
           <li class="me-2" role="presentation">
             <button
-              class="inline-block p-4 border-b-2 rounded-t-lg"
+              class="inline-block rounded-t-lg border-b-2 p-4"
               id="no-conflict-tab"
               data-tabs-target="#no-conflict"
               type="button"
@@ -171,7 +166,7 @@
           </li>
           <li class="me-2" role="presentation">
             <button
-              class="inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
+              class="inline-block rounded-t-lg border-b-2 p-4 hover:border-gray-300 hover:text-gray-600 dark:hover:text-gray-300"
               id="dashboard-tab"
               data-tabs-target="#dashboard"
               type="button"
@@ -184,7 +179,7 @@
           </li>
           <li class="me-2" role="presentation">
             <button
-              class="inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
+              class="inline-block rounded-t-lg border-b-2 p-4 hover:border-gray-300 hover:text-gray-600 dark:hover:text-gray-300"
               id="settings-tab"
               data-tabs-target="#settings"
               type="button"
@@ -197,7 +192,7 @@
           </li>
           <li role="presentation">
             <button
-              class="inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
+              class="inline-block rounded-t-lg border-b-2 p-4 hover:border-gray-300 hover:text-gray-600 dark:hover:text-gray-300"
               id="contacts-tab"
               data-tabs-target="#contacts"
               type="button"
@@ -212,13 +207,13 @@
 
         <div id="default-tab-content">
           <div
-            class="hidden p-4 flex flex-row gap-8"
+            class="flex hidden flex-row gap-8 p-4"
             id="no-conflict"
             role="tabpanel"
             aria-labelledby="no-conflict-tab"
           >
             <table
-              class="w-full text-sm text-left rtl:text-right dark:text-white bg-white dark:bg-gray-900 rounded-lg"
+              class="w-full rounded-lg bg-white text-left text-sm dark:bg-gray-900 dark:text-white rtl:text-right"
             >
               <tbody>
                 <tr class="border-b dark:border-gray-700">
@@ -254,18 +249,18 @@
               </tbody>
             </table>
 
-            <div class="flex flex-col gap-4 w-full">
+            <div class="flex w-full flex-col gap-4">
               <div
-                class="bg-yellow-50 dark:bg-yellow-900 h-full rounded-lg px-6 py-4"
+                class="h-full rounded-lg bg-yellow-50 px-6 py-4 dark:bg-yellow-900"
               >
-                <h3 class="shrink-0 text-md font-semibold dark:text-white">
+                <h3 class="text-md shrink-0 font-semibold dark:text-white">
                   Recommendations
                 </h3>
               </div>
               <div
-                class="bg-red-100 dark:bg-red-900 h-full rounded-lg px-6 py-4"
+                class="h-full rounded-lg bg-red-100 px-6 py-4 dark:bg-red-900"
               >
-                <h3 class="shrink-0 text-md font-semibold dark:text-white">
+                <h3 class="text-md shrink-0 font-semibold dark:text-white">
                   Errors
                 </h3>
               </div>
