@@ -3,11 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <title>Digital Twin Showcase</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <link href="./index.css" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css" />
 
-    <script defer src="../../node_modules/flowbite/dist/flowbite.min.js"></script>
     <script type="module" src="./index.js"></script>
 
     <script>
@@ -24,8 +23,39 @@
   </head>
 
   <body
-    class="mx-auto flex max-w-screen-xl flex-col justify-between gap-8 bg-white px-4 pb-16 pt-8 dark:bg-gray-900 lg:pb-24 lg:pt-16"
+    class="format mx-auto flex max-w-screen-xl flex-col justify-between gap-8 bg-white px-4 pb-16 pt-8 dark:format-invert dark:bg-gray-900 lg:pb-24 lg:pt-16"
   >
+    <div
+      id="api-error-banner"
+      tabindex="-1"
+      class="fixed start-0 top-0 z-50 flex hidden w-full justify-between bg-red-200 p-2 dark:bg-red-800"
+    >
+      <div class="mx-auto flex items-center">
+        <p class="flex items-center text-sm font-normal">
+          <span
+            class="me-3 inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full"
+          >
+            <svg
+              className="w-6 h-6"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0Zm11-4a1 1 0 1 0-2 0v5a1 1 0 1 0 2 0V8Zm-1 7a1 1 0 1 0 0 2 1 1 0 1 0 0-2Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+
+            <span class="sr-only">Light bulb</span>
+          </span>
+          <span>Could not fetch API data. Please try again later.</span>
+        </p>
+      </div>
+    </div>
+
     <!-- Header -->
     <header
       class="flex w-full flex-row items-center justify-between rounded-lg bg-green-100 p-4 dark:border-gray-700 dark:bg-green-900"
@@ -47,9 +77,7 @@
         </svg>
 
         <!-- Title -->
-        <h1 class="mb-0 shrink-0 text-3xl font-extrabold dark:text-white">
-          Digital Twin Showcase
-        </h1>
+        <h1 class="mb-0">Digital Twin Showcase</h1>
       </div>
 
       <!-- Actions -->
@@ -140,12 +168,10 @@
       <div
         class="flex flex-col justify-start rounded-lg bg-gray-100 p-4 dark:bg-gray-800"
       >
-        <h2 class="m-4 shrink-0 text-2xl font-extrabold dark:text-white">
-          Simulate Routines
-        </h2>
+        <h2 class="m-4">Simulate Routines</h2>
 
         <ul
-          class="mb-4 flex flex-wrap border-b border-gray-200 text-center text-sm font-medium dark:border-gray-700"
+          class="mb-4 flex list-none flex-wrap border-b border-gray-200 text-center text-sm font-medium dark:border-gray-700"
           id="default-tab"
           data-tabs-toggle="#default-tab-content"
           role="tablist"
@@ -252,16 +278,12 @@
               <div
                 class="h-full rounded-lg bg-yellow-100 px-6 py-4 dark:bg-yellow-600"
               >
-                <h3 class="text-md shrink-0 font-semibold dark:text-white">
-                  Recommendations
-                </h3>
+                <h3>Recommendations</h3>
               </div>
               <div
                 class="h-full rounded-lg bg-red-100 px-6 py-4 dark:bg-red-900"
               >
-                <h3 class="text-md shrink-0 font-semibold dark:text-white">
-                  Errors
-                </h3>
+                <h3>Errors</h3>
               </div>
             </div>
           </div>

@@ -1,4 +1,10 @@
-document.getElementById("goto-api").href=process.env.BACKEND_URL;
+import "flowbite";
+
+document.getElementById("goto-api").href = process.env.BACKEND_URL;
+
+fetch(process.env.BACKEND_URL + "/appliances").catch((err) => {
+  document.getElementById("api-error-banner").classList.remove("hidden");
+});
 
 const themeToggleDarkIcon = document.getElementById("theme-toggle-dark-icon");
 const themeToggleLightIcon = document.getElementById("theme-toggle-light-icon");
@@ -59,7 +65,7 @@ document.querySelectorAll("#default-tab li button").forEach((tab) => {
             "dark:text-blue-500",
             "dark:border-blue-500",
             "dark:hover:text-blue-500",
-          ]
+          ],
         );
 
         const classes = [
