@@ -1,8 +1,8 @@
 {
-  "name": "frontend",
+  "name": "digital_twin",
   "version": "1.0.0",
   "license": "MIT",
-  "source": "src/index.html",
+  "source": "dt/frontend/index.html",
   "browserslist": "defaults",
   "scripts": {
     "start": "parcel",
@@ -12,6 +12,7 @@
   "devDependencies": {
     "parcel": "^2.11.0",
     "postcss": "^8.4.33",
+    "posthtml-expressions": "^1.11.3",
     "prettier": "3.2.4",
     "prettier-plugin-tailwindcss": "^0.5.11",
     "tailwindcss": "^3.4.1"

@@ -1,3 +1,5 @@
+document.getElementById("goto-api").href=process.env.BACKEND_URL;
+
 const themeToggleDarkIcon = document.getElementById("theme-toggle-dark-icon");
 const themeToggleLightIcon = document.getElementById("theme-toggle-light-icon");
 
@@ -78,10 +80,4 @@ document.querySelectorAll("#default-tab li button").forEach((tab) => {
   };
 
   new MutationObserver(callback).observe(tab, { attributes: true });
-});
-
-fetch("test-routines/no-conflict.json").then((response) => {
-  response.json().then((data) => {
-    document.querySelector("#no-conflict code").value = data;
-  });
 });
