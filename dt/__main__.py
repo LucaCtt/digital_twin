@@ -1,24 +1,25 @@
 #!/usr/bin/env python3
 
 import os
-import tomllib
 import uvicorn
 
 from api import create_api
-from data import JSONRepository
-from plots import plot_consumptions_matrix, plot_simulated_matrix
+from data import RepositoryFactory
+from config import Config
+from consumptions import ConsumptionsMatrix
+from dt.costs import CostsMatrix
+
 
 def start_api():
-    with open(os.environ["CONFIG_FILE"], "rb") as f:
-        config = tomllib.load(f)
+    config = Config.from_toml(os.environ["CONFIG_FILE"])
 
-    if config["database"]["type"] != "json":
-        raise ValueError("Database type not supported")
+    repository = RepositoryFactory.create(config.database_config)
+    costs_matrix = CostsMatrix(config.energy_config)
+    consumptions_matrix = ConsumptionsMatrix(
+        repository.get_appliances(), repository.get_routines(), costs_matrix)
 
-    repository = JSONRepository(config["database"]["appliances_dir"], config["database"]
-                                ["routines_dir"], config["database"]["test_routines_dir"])
+    uvicorn.run(create_api(repository, consumptions_matrix))
 
-    uvicorn.run(create_api(repository))
 
 if __name__ == "__main__":
     start_api()

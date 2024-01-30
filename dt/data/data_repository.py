@@ -10,6 +10,7 @@ from datetime import datetime
 import json
 import os
 
+from config import DatabaseConfig
 from .models import Appliance, OperationMode, Routine, RoutineAction
 
 
@@ -224,3 +225,24 @@ def read_routines_json(dir_path: str, appliances: list[Appliance]) -> list[Routi
         routines.append(routine)
 
     return routines
+
+
+class RepositoryFactory:
+    """Factory for the data repository. Only supports JSON for now.
+    """
+
+    @staticmethod
+    def create(config: DatabaseConfig) -> DataRepository:
+        """Create a data repository.
+
+        Args:
+            config (Config): The application configuration.
+
+        Returns:
+            DataRepository: The data repository.
+        """
+        if config.database_type != "json":
+            raise ValueError("Database type not supported")
+
+        return JSONRepository(
+            config.appliances_dir, config.routines_dir, config.test_routines_dir)

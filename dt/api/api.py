@@ -4,9 +4,7 @@ This module provides the REST API for the Digital Twin, implemented using [FastA
 """
 
 from datetime import datetime
-import os
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 
 from data import DataRepository, Routine, RoutineAction
 from consumptions import ConsumptionsMatrix
@@ -18,7 +16,7 @@ __APPLIANCE_TAG = "Appliance"
 __ROUTINE_TAG = "Routine"
 
 
-def create_api(repository: DataRepository, title="Digital Twin API", version: str = "1.0.0") -> FastAPI:
+def create_api(repository: DataRepository, matrix: ConsumptionsMatrix, title="Digital Twin API", version: str = "1.0.0") -> FastAPI:
     """Create a FastAPI instance.
 
     Create a new FastAPI instance, using the given data repository and
@@ -34,9 +32,6 @@ def create_api(repository: DataRepository, title="Digital Twin API", version: st
     Returns:
         FastAPI: The FastAPI instance.
     """
-
-    matrix = ConsumptionsMatrix(
-        repository.get_appliances(), repository.get_routines())
 
     api = FastAPI(
         title=title,
