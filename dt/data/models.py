@@ -8,7 +8,8 @@ Integers were chosen as they are more efficient in memory, easy to assign as the
 easy to compare, and they allow more than enough IDs for the scope of this project.
 """
 
-from datetime import datetime
+from __future__ import annotations
+from datetime import datetime, timedelta
 
 
 class OperationMode:
@@ -75,6 +76,17 @@ class RoutineAction:
         self.mode = mode
         self.duration = duration
 
+    def conflicts_with(self, other: RoutineAction):
+        """Check if the action conflicts with another action.
+
+        Args:
+            other (RoutineAction): The other action to check.
+
+        Returns:
+            bool: True if the actions conflict, False otherwise.
+        """
+        return self.appliance == other.appliance and self.mode != other.mode
+
 
 class Routine:
     """A routine.
@@ -93,3 +105,33 @@ class Routine:
         self.enabled = enabled
         self.when = when
         self.actions = actions
+
+    def actions_conflict_with(self, other: Routine) -> tuple[RoutineAction, RoutineAction] | None:
+        """Check if any action in the routine conflicts with any action in another routine.
+
+        Args:
+            other (Routine): The other routine to check.
+
+        Returns:
+            bool: True if the routines conflict, False otherwise.
+        """
+
+        if not self.enabled or not other.enabled:
+            return None
+
+        def durations_overlap(when1: datetime, duration1: int, when2: datetime, duration2: int) -> bool:
+            end1 = when1 + timedelta(minutes=duration1)
+            end2 = when2 + timedelta(minutes=duration2)
+
+            return when1 < end2 and when2 < end1
+
+        for action in self.actions:
+            for other_action in other.actions:
+                if action.appliance == other_action.appliance and \
+                        action.mode != other_action.mode and \
+                        action.duration and \
+                        other_action.duration and \
+                        durations_overlap(self.when, action.duration, other.when, other_action.duration):
+                    return action, other_action
+
+        return None

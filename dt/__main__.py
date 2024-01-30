@@ -6,8 +6,7 @@ import uvicorn
 from api import create_api
 from data import RepositoryFactory
 from config import Config
-from consumptions import ConsumptionsMatrix
-from dt.costs import CostsMatrix
+from energy import ConsumptionsMatrix, CostsMatrix
 
 
 def start_api():

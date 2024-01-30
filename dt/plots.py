@@ -3,7 +3,7 @@ import matplotlib.cm as cm
 from matplotlib import patheffects
 import numpy as np
 
-from consumptions import ConsumptionsMatrix
+from dt.energy import ConsumptionsMatrix
 from data import Appliance, Routine, DataRepository
 from const import MINUTES_IN_DAY
 

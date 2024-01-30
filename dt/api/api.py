@@ -7,7 +7,7 @@ from datetime import datetime
 from fastapi import FastAPI
 
 from data import DataRepository, Routine, RoutineAction
-from consumptions import ConsumptionsMatrix
+from energy import ConsumptionsMatrix
 from . import errors
 from .schemas import ApplianceOut, RoutineOut, RoutineIn
 
