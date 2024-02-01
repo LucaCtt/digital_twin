@@ -1,4 +1,5 @@
 from __future__ import annotations
+from abc import ABC
 from datetime import datetime
 import numpy as np
 
@@ -7,20 +8,44 @@ from data import Appliance, Routine, RoutineAction
 import const
 
 
-class InconsistentRoutinesError(Exception):
+class Recommendation(ABC):
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+
+class DisableRoutineRecommendation(Recommendation):
+    def __init__(self, routine: Routine) -> None:
+        super().__init__(f"Disable routine {routine.name}.")
+        self.routine = routine
+
+
+class ConflictError(Exception):
+    def __init__(self, message: str, recommendations: list[Recommendation] | None = None) -> None:
+        super().__init__(message)
+        self.reccomendations = recommendations
+
+
+class InconsistentRoutinesError(ConflictError):
     def __init__(self, first_routine: Routine, second_routine: Routine, first_action: RoutineAction, second_action: RoutineAction):
+        recommendations: list[Recommendation] = [DisableRoutineRecommendation(
+            first_routine), DisableRoutineRecommendation(second_routine)]
+
         super().__init__(
-            f"Appliance {first_action.appliance.device} has conflicting modes.")
+            f"Appliance {first_action.appliance.device} has conflicting modes.", recommendations)
+
         self.first_routine = first_routine
         self.second_routine = second_routine
         self.first_action = first_action
         self.second_action = second_action
 
 
-class MaxPowerExceededError(Exception):
-    def __init__(self, max_power: float, when: datetime):
+class MaxPowerExceededError(ConflictError):
+    def __init__(self, max_power: float, when: datetime, routines_to_disable: list[Routine]):
+        recommendations: list[Recommendation] = [DisableRoutineRecommendation(
+            r) for r in routines_to_disable]
+
         super().__init__(
-            f"Power consumption of the house is greater than {max_power} at {when}.")
+            f"Power consumption of the house is greater than {max_power} at {when}.", recommendations)
         self.max_power = max_power
         self.when = when
 
@@ -79,9 +104,13 @@ class ConsumptionsMatrix():
         # Check that the power consumption of each appliance is not greater than the maximum power consumption of the house
         for minute_of_day in range(const.MINUTES_IN_DAY):
             if float(np.sum(self.matrix[minute_of_day, :])) > config.max_power:
+                time = datetime.today().replace(hour=minute_of_day//60, minute=minute_of_day % 60)
+                most_consuming = sorted(
+                    routines, key=lambda r: r.power_consumption_at(time), reverse=True)
+
                 # Convert minute of day to datetime
                 raise MaxPowerExceededError(
-                    config.max_power, datetime.today().replace(hour=minute_of_day//60, minute=minute_of_day % 60))
+                    config.max_power, time, most_consuming[:2])
 
     def total_consumption(self, when: datetime) -> float:
         """Calculate the total consumption of the house at a given time.
@@ -188,7 +217,5 @@ class Simulator:
             self.consumptions_matrix.appliances, self.consumptions_matrix.routines + [new_routine], self.consumptions_matrix.config)
 
         recommendations = []
-
-
 
         return new_matrix, recommendations

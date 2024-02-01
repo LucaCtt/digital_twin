@@ -120,8 +120,8 @@ class Routine:
             return None
 
         def durations_overlap(when1: datetime, duration1: int, when2: datetime, duration2: int) -> bool:
-            end1 = when1 + timedelta(minutes=duration1)
-            end2 = when2 + timedelta(minutes=duration2)
+            end1 = when1 + timedelta(seconds=duration1)
+            end2 = when2 + timedelta(seconds=duration2)
 
             return when1 < end2 and when2 < end1
 
@@ -135,3 +135,15 @@ class Routine:
                     return action, other_action
 
         return None
+
+    def power_consumption_at(self, when: datetime) -> float:
+        """Calculate the power consumption of the routine at a given time.
+
+        Args:
+            when (datetime): The time to calculate the power consumption.
+
+        Returns:
+            float: The power consumption of the routine at the given time.
+        """
+        return sum(action.mode.power_consumption for action in self.actions
+                   if action.duration and self.when <= when <= self.when + timedelta(seconds=action.duration))
