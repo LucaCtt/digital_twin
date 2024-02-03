@@ -1,7 +1,10 @@
 [energy]
-max_power = 3                  # Maximum power draw, in kW
-energy_rates_number = 2           # Number of energy rates, e.g. 2 means dual-rate
-energy_rate_prices = [0,131870, 0,111492] # Price for each energy rate, in €/kWh
+max_power = 3000 # Maximum power draw, in W
+energy_rates_number = 2 # Number of energy rates, e.g. 2 means dual-rate
+energy_rates_prices = [
+    0.131870,
+    0.111492,
+] # Price for each energy rate, in €/kWh
 
 [database]
 type = "json"

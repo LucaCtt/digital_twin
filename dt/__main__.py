@@ -6,18 +6,16 @@ import uvicorn
 from api import create_api
 from data import RepositoryFactory
 from config import Config
-from energy import ConsumptionsMatrix, CostsMatrix
-
 
 def start_api():
+    if os.environ.get("CONFIG_FILE") is None:
+        raise ValueError("CONFIG_FILE environment variable is not set")
+
     config = Config.from_toml(os.environ["CONFIG_FILE"])
 
     repository = RepositoryFactory.create(config.database_config)
-    costs_matrix = CostsMatrix(config.energy_config)
-    consumptions_matrix = ConsumptionsMatrix(
-        repository.get_appliances(), repository.get_routines(), costs_matrix)
 
-    uvicorn.run(create_api(repository, consumptions_matrix))
+    uvicorn.run(create_api(repository, config.energy_config))
 
 
 if __name__ == "__main__":

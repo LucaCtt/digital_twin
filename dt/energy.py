@@ -5,27 +5,40 @@ import numpy as np
 
 from config import EnergyConfig
 from data import Appliance, Routine, RoutineAction
+from ortools.linear_solver import pywraplp
 import const
 
 
 class Recommendation(ABC):
+    """A recommendation to solve a conflict or to improve the energy consumption.
+    """
+
     def __init__(self, message: str) -> None:
         self.message = message
 
 
 class DisableRoutineRecommendation(Recommendation):
+    """A recommendation to disable a routine.
+    """
+
     def __init__(self, routine: Routine) -> None:
         super().__init__(f"Disable routine {routine.name}.")
         self.routine = routine
 
 
 class ConflictError(Exception):
+    """Error raised when there is a conflict in the routines.
+    """
+
     def __init__(self, message: str, recommendations: list[Recommendation] | None = None) -> None:
         super().__init__(message)
-        self.reccomendations = recommendations
+        self.recommendations = recommendations
 
 
 class InconsistentRoutinesError(ConflictError):
+    """Error raised when there are two routines with conflicting actions.
+    """
+
     def __init__(self, first_routine: Routine, second_routine: Routine, first_action: RoutineAction, second_action: RoutineAction):
         recommendations: list[Recommendation] = [DisableRoutineRecommendation(
             first_routine), DisableRoutineRecommendation(second_routine)]
@@ -40,6 +53,9 @@ class InconsistentRoutinesError(ConflictError):
 
 
 class MaxPowerExceededError(ConflictError):
+    """Error raised when the power consumption of the house is greater than the maximum power consumption.
+    """
+
     def __init__(self, max_power: float, when: datetime, routines_to_disable: list[Routine]):
         recommendations: list[Recommendation] = [DisableRoutineRecommendation(
             r) for r in routines_to_disable]
@@ -112,6 +128,17 @@ class ConsumptionsMatrix():
                 raise MaxPowerExceededError(
                     config.max_power, time, most_consuming[:2])
 
+    def add_routine(self, routine: Routine) -> ConsumptionsMatrix:
+        """Creates a new matrix with a new routine added.
+
+        Args:
+            routine (Routine): The routine to add.
+
+        Returns:
+            ConsumptionsMatrix: The new matrix with the new routine added.
+        """
+        return ConsumptionsMatrix(self.appliances, self.routines + [routine], self.config)
+
     def total_consumption(self, when: datetime) -> float:
         """Calculate the total consumption of the house at a given time.
 
@@ -161,6 +188,13 @@ class ConsumptionsMatrix():
 
 
 class CostsMatrix:
+    """A matrix that represents the cost of the house at each time of the week.
+
+    The consumption at each time depends on the number of energy rates,
+    according to the italian energy market:
+    https://www.arera.it/bolletta/glossario-dei-termini/dettaglio/fasce-orarie
+    """
+
     def __init__(self, config: EnergyConfig) -> None:
         self.config = config
         self.matrix = np.zeros(
@@ -193,7 +227,7 @@ class CostsMatrix:
                                     60] = config.energy_rates_prices[1]
 
     def get_cost(self, when: datetime) -> float:
-        """Calculate the cost of the house at a given time.
+        """Calculate the eletrcity cost at a given time.
 
         Args:
             when (datetime): The time to calculate the cost.
@@ -207,15 +241,55 @@ class CostsMatrix:
         return self.matrix[day_of_week, minute_of_day]
 
 
-class Simulator:
-    def __init__(self, consumptions_matrix: ConsumptionsMatrix, costs_matrix: CostsMatrix) -> None:
+class RoutineSimulator:
+    def __init__(self, consumptions_matrix: ConsumptionsMatrix, costs_matrix: CostsMatrix, max_power: float) -> None:
         self.consumptions_matrix = consumptions_matrix
         self.costs_matrix = costs_matrix
+        self.max_power = max_power
 
-    def simulate(self, new_routine: Routine) -> tuple[ConsumptionsMatrix, list[str]]:
-        new_matrix = ConsumptionsMatrix(
-            self.consumptions_matrix.appliances, self.consumptions_matrix.routines + [new_routine], self.consumptions_matrix.config)
+    def simulate(self, routine: Routine) -> list[Recommendation]:
+        self.simulated_consumption_matrix = self.consumptions_matrix.add_routine(routine)
+        return []
+    
 
-        recommendations = []
+    """
+    def find_best_start_time(self, routine: Routine) -> datetime:
+        existing_matrix = self.consumptions_matrix.raw_matrix()
+        simulated_matrix = ConsumptionsMatrix(self.consumptions_matrix.appliances, [
+                                              routine], self.consumptions_matrix.config).raw_matrix()
 
-        return new_matrix, recommendations
+        e = np.zeros(existing_matrix.shape, dtype=np.int8)
+
+        for minute in range(const.MINUTES_IN_DAY):
+            for appliance in self.consumptions_matrix.appliances:
+                e[minute, appliance.id] = self.solver.NumVar(
+                    0, self.max_power, f"e_{minute}_{appliance.id}")
+
+                appliance = next(
+                    a for a in self.consumptions_matrix.appliances if a.id == appliance.id)
+                mode = next(m for m in appliance.modes if m.id ==
+                            existing_matrix[minute, appliance.id])
+                self.solver.Add(e[minute, appliance.id]
+                                == mode.power_consumption)
+
+        x = np.zeros((const.MINUTES_IN_DAY, len(
+            routine.actions)), dtype=np.int8)
+        y = np.zeros((const.MINUTES_IN_DAY, len(
+            routine.actions)), dtype=np.int8)
+
+        for minute in range(const.MINUTES_IN_DAY):
+            for action in routine.actions:
+                x[minute, action.id] = self.solver.IntVar(
+                    0, 1, f"x_{minute}_{action.id}")
+                y[minute, action.id] = self.solver.IntVar(
+                    0, 1, f"x_{minute}_{action.id}")
+
+                start = routine.when.hour * 60 + routine.when.minute
+                duration = action.duration if action.duration else const.MINUTES_IN_DAY - start
+                self.solver.Add([y[i, action.id] == 1 for i in range(
+                    minute + duration) if x[minute, action.id] == 1])
+                self.solver.Add(sum(x[:, action.id]) == 1)
+                self.solver.Add(sum(y[:, action.id]) == minute + duration)
+
+        return 0
+    """

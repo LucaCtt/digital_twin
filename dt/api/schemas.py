@@ -9,6 +9,7 @@ There is duplication the fields of the schemas and the model, but I don't know h
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 from pydantic import BaseModel
 from pydantic import BaseModel
 
@@ -87,3 +88,14 @@ class RoutineIn(BaseModel):
     when: datetime
     actions: list[RoutineActionIn]
     enabled: bool = True
+
+
+class RecommendationOut(BaseModel):
+    message: str
+
+    # Enable creating an instance of this schema from a model.
+    class Config:
+        from_attributes = True
+
+class SimulationOut(BaseModel):
+    result: Any

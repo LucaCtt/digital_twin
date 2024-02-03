@@ -23,7 +23,7 @@ class DatabaseConfig:
 class Config:
     def __init__(self, config: dict[str, Any]) -> None:
         self.energy_config = EnergyConfig(
-            config["home"]["max_power"], config["home"]["energy_rates_number"], config["home"]["energy_rates_prices"])
+            config["energy"]["max_power"], config["energy"]["energy_rates_number"], config["energy"]["energy_rates_prices"])
 
         self.database_config = DatabaseConfig(
             config["database"]["type"], config["database"]["appliances_dir"], config["database"]["routines_dir"], config["database"]["test_routines_dir"])

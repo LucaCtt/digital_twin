@@ -241,7 +241,7 @@ class RepositoryFactory:
         Returns:
             DataRepository: The data repository.
         """
-        if config.database_type != "json":
+        if config.type != "json":
             raise ValueError("Database type not supported")
 
         return JSONRepository(
