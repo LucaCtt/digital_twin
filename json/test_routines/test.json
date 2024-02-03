@@ -12,6 +12,12 @@
             "appliance_id": 0,
             "mode_id": 2,
             "duration": 18000
+        },
+        {
+            "id": 1,
+            "appliance_id": 14,
+            "mode_id": 2,
+            "duration": 18000
         }
     ]
 }

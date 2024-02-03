@@ -1,24 +1,37 @@
+#!/usr/bin/env python3
+
+import os
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from matplotlib import patheffects
 import numpy as np
 
-from dt.energy import ConsumptionsMatrix
+from config import Config, EnergyConfig
+from dt.data.data_repository import RepositoryFactory
+from energy import ConsumptionsMatrix
 from data import Appliance, Routine, DataRepository
 from const import MINUTES_IN_DAY
+
+matplotlib.use("GTK4Agg")
 
 plt.rcParams['axes.labelsize'] = "medium"
 plt.rcParams['font.size'] = 11
 plt.rcParams['font.family'] = "serif"
 plt.rcParams['savefig.bbox'] = "tight"
 
+def __get_appliance_name(appliance: Appliance):
+    if appliance.device in ["lamp", "television"]:
+        return f"{appliance.device.title()} ({appliance.location})"
+    else:
+        return f"{appliance.device.title()}"
 
-def __prepare_matrix_figure(appliances: list[Appliance], routines: list[Routine], title: str = "Consumptions"):
+def __prepare_matrix_figure(appliances: list[Appliance], routines: list[Routine], config: EnergyConfig, title: str = "Consumptions"):
     sorted_appliances = [a for a in sorted(appliances, key=lambda a: a.id)]
-    appliances_names = [a.device.title() for a in sorted_appliances]
+    appliances_names = [__get_appliance_name(a) for a in sorted_appliances]
     hours_in_day = [f"{h:02d}:00" for h in range(0, 24)]
 
-    matrix_raw = ConsumptionsMatrix(appliances, routines).raw_matrix()
+    matrix_raw = ConsumptionsMatrix(appliances, routines, config).raw_matrix()
     matrix_masked = np.ma.masked_where(matrix_raw == 0, matrix_raw)
 
     c_map = cm.get_cmap('tab10')
@@ -68,19 +81,27 @@ def __prepare_matrix_figure(appliances: list[Appliance], routines: list[Routine]
     plt.tick_params(bottom=False)
 
     plt.tight_layout()
+    plt.savefig(f"{title}.png", dpi=300)
 
 
-def plot_consumptions_matrix(repository: DataRepository):
+def plot_consumptions_matrix(repository: DataRepository, config: EnergyConfig):
     __prepare_matrix_figure(repository.get_appliances(),
-                            repository.get_routines())
+                            repository.get_routines(), config)
 
     plt.show()
 
 
-def plot_simulated_matrix(repository: DataRepository):
+def plot_simulated_matrix(repository: DataRepository, config: EnergyConfig):
     __prepare_matrix_figure(repository.get_appliances(),
-                            repository.get_routines(), "Real")
+                            repository.get_routines(), config, "Real")
     __prepare_matrix_figure(
-        repository.get_appliances(), repository.get_routines() + repository.get_test_routines(), "Simulated")
+        repository.get_appliances(), repository.get_routines() + repository.get_test_routines(), config, "Simulated")
 
     plt.show()
+
+
+if __name__ == "__main__":
+    config = Config.from_toml(os.environ["CONFIG_FILE"])
+    repository = RepositoryFactory.create(config.database_config)
+
+    plot_simulated_matrix(repository, config.energy_config)

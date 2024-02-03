@@ -40,11 +40,32 @@ def create_api(repository: DataRepository, config: EnergyConfig, title="Digital 
         repository.get_appliances(), repository.get_routines(), config)
     costs = CostsMatrix(config)
 
+    tags_metadata = [
+    {
+        "name": __CONSUMPTION_TAG,
+        "description": "Information about the energy consumption of the appliances in the home."
+    },
+    {
+        "name": __APPLIANCE_TAG,
+        "description": "Information about the appliances in the home."
+    },
+    {
+        "name": __ROUTINE_TAG,
+        "description": "Information about the registered routines."
+    },
+    {
+        "name": __SIMULATE_TAG,
+        "description": "Simulate the addition of a routine and get recommendations."
+    }
+]
+
     api = FastAPI(
         title=title,
         version=version,
         docs_url="/",
-        redoc_url=None
+        redoc_url=None,  # Disable Redoc
+        summary="API to interact with the Digital Twin.",
+        openapi_tags=tags_metadata,
     )
 
     @api.exception_handler(ConflictError)

@@ -5,7 +5,6 @@ import numpy as np
 
 from config import EnergyConfig
 from data import Appliance, Routine, RoutineAction
-from ortools.linear_solver import pywraplp
 import const
 
 
