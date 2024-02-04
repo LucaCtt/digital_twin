@@ -91,6 +91,11 @@ class RoutineIn(BaseModel):
 
 
 class RecommendationOut(BaseModel):
+    """The schema for a recommendation.
+    
+    The context represents additional information about the recommendation.
+    """
+
     message: str
     context: dict[str, Any] | None = None
 
@@ -98,19 +103,39 @@ class RecommendationOut(BaseModel):
     class Config:
         from_attributes = True
 
+
 class ErrorOut(BaseModel):
+    """The schema for an error.
+
+    The context represents additional information about the error.
+    """
+
     message: str
     context: dict[str, Any] | None = None
 
 
 class BaseResponse(BaseModel):
+    """The schema for a base response.
+
+    The list of recommendations should always be null rather than an empty list.
+    """
+
     error: ErrorOut | None = None
     recommendations: list[RecommendationOut] | None = None
 
+
 T = TypeVar("T")
 
+
 class ValueResponse(BaseResponse, Generic[T]):
+    """The schema for a response with a single return value.
+    """
+
     value: T
 
+
 class ListResponse(BaseResponse, Generic[T]):
+    """The schema for a response with a list of return values.
+    """
+
     value: list[T]

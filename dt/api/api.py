@@ -73,15 +73,28 @@ def create_api(repository: DataRepository, config: EnergyConfig, title="Digital 
 
     @api.exception_handler(HTTPException)
     async def http_exception_handler(request: fastapi.Request, exc: HTTPException):
+        """Handle HTTP exceptions.
+
+        See [FastAPI documentation](https://fastapi.tiangolo.com/tutorial/handling-errors/#override-the-httpexception-error-handler) for more information.
+        """
+
         return JSONResponse(status_code=exc.status_code, content=jsonable_encoder(schemas.BaseResponse(error=schemas.ErrorOut(message=exc.detail))))
 
     @api.exception_handler(RequestValidationError)
     async def validation_exception_handler(request: fastapi.Request, exc: RequestValidationError):
+        """Handle validation exceptions.
+
+        See [FastAPI documentation](https://fastapi.tiangolo.com/tutorial/handling-errors/#override-request-validation-exceptions) for more information.
+        """
+
         return JSONResponse(status_code=fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY,
                             content=jsonable_encoder(schemas.BaseResponse(error=schemas.ErrorOut(message=str(exc)))))
 
     @api.exception_handler(ConflictError)
     async def conflict_error_handler(request: fastapi.Request, exc: ConflictError):
+        """Handle routine conflict errors.
+        """
+
         error = schemas.ErrorOut(message=str(exc), context=exc.context)
         recommendations = [schemas.RecommendationOut(message=r.message, context=r.context)
 
@@ -188,6 +201,19 @@ def create_api(repository: DataRepository, config: EnergyConfig, title="Digital 
 
 
 def __routine_schema_to_model(routine_in: schemas.RoutineIn, repository: DataRepository) -> Routine:
+    """Convert a routine schema to a routine model.
+
+    Args:
+        routine_in (schemas.RoutineIn): The routine schema.
+        repository (DataRepository): The data repository to get the routine model from.
+
+    Raises:
+        errors.APPLIANCE_INVALID: Appliance or a mode of the appliance not found in the repository.
+
+    Returns:
+        Routine: _description_
+    """
+
     actions = []
 
     for action_in in routine_in.actions:
@@ -211,4 +237,13 @@ def __routine_schema_to_model(routine_in: schemas.RoutineIn, repository: DataRep
 
 
 def __recommendation_model_to_schema(recommendation: Recommendation) -> schemas.RecommendationOut:
+    """Convert a recommendation model to a recommendation schema.
+
+    Args:
+        recommendation (Recommendation): The recommendation model.
+
+    Returns:
+        schemas.RecommendationOut: The recommendation schema.
+    """
+
     return schemas.RecommendationOut(**vars(recommendation))
