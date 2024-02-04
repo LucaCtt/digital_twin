@@ -3,7 +3,7 @@
     "name": "Lavaggio",
     "when": [
         "Today",
-        "19:00"
+        "14:00"
     ],
     "enabled": true,
     "actions": [

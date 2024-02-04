@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+"""Plot consumptions matrix
+
+This script plots the consumptions matrix of the appliances in the database.
+"""
+
 import os
 import matplotlib
 import matplotlib.pyplot as plt
@@ -15,16 +20,20 @@ from const import MINUTES_IN_DAY
 
 matplotlib.use("GTK4Agg")
 
+SAVE = False
+
 plt.rcParams['axes.labelsize'] = "medium"
 plt.rcParams['font.size'] = 11
 plt.rcParams['font.family'] = "serif"
 plt.rcParams['savefig.bbox'] = "tight"
+
 
 def __get_appliance_name(appliance: Appliance):
     if appliance.device in ["lamp", "television"]:
         return f"{appliance.device.title()} ({appliance.location})"
     else:
         return f"{appliance.device.title()}"
+
 
 def __prepare_matrix_figure(appliances: list[Appliance], routines: list[Routine], config: EnergyConfig, title: str = "Consumptions"):
     sorted_appliances = [a for a in sorted(appliances, key=lambda a: a.id)]
@@ -81,7 +90,8 @@ def __prepare_matrix_figure(appliances: list[Appliance], routines: list[Routine]
     plt.tick_params(bottom=False)
 
     plt.tight_layout()
-    plt.savefig(f"{title}.png", dpi=300)
+    if SAVE:
+        plt.savefig(f"{title}.png", dpi=300)
 
 
 def plot_consumptions_matrix(repository: DataRepository, config: EnergyConfig):
