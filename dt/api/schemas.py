@@ -9,7 +9,7 @@ There is duplication the fields of the schemas and the model, but I don't know h
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Generic, TypeVar
 from pydantic import BaseModel
 from pydantic import BaseModel
 
@@ -92,10 +92,25 @@ class RoutineIn(BaseModel):
 
 class RecommendationOut(BaseModel):
     message: str
+    context: dict[str, Any] | None = None
 
     # Enable creating an instance of this schema from a model.
     class Config:
         from_attributes = True
 
-class SimulationOut(BaseModel):
-    result: Any
+class ErrorOut(BaseModel):
+    message: str
+    context: dict[str, Any] | None = None
+
+
+class BaseResponse(BaseModel):
+    error: ErrorOut | None = None
+    recommendations: list[RecommendationOut] | None = None
+
+T = TypeVar("T")
+
+class ValueResponse(BaseResponse, Generic[T]):
+    value: T
+
+class ListResponse(BaseResponse, Generic[T]):
+    value: list[T]

@@ -6,13 +6,16 @@ This module provides the REST API for the Digital Twin, implemented using [FastA
 from datetime import datetime
 from fastapi import FastAPI
 import fastapi
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException
 
 from data import DataRepository, Routine, RoutineAction
-from dt.config import EnergyConfig
-from energy import ConflictError, ConsumptionsMatrix, Recommendation, RoutineSimulator, CostsMatrix
+from config import EnergyConfig
+from energy import ConflictError, ConsumptionsMatrix, Recommendation, RoutineOptimizer, CostsMatrix
 from . import errors
-from .schemas import ApplianceOut, RecommendationOut, RoutineOut, RoutineIn
+from . import schemas
 
 __CONSUMPTION_TAG = "Consumption"
 __APPLIANCE_TAG = "Appliance"
@@ -41,23 +44,23 @@ def create_api(repository: DataRepository, config: EnergyConfig, title="Digital 
     costs = CostsMatrix(config)
 
     tags_metadata = [
-    {
-        "name": __CONSUMPTION_TAG,
-        "description": "Information about the energy consumption of the appliances in the home."
-    },
-    {
-        "name": __APPLIANCE_TAG,
-        "description": "Information about the appliances in the home."
-    },
-    {
-        "name": __ROUTINE_TAG,
-        "description": "Information about the registered routines."
-    },
-    {
-        "name": __SIMULATE_TAG,
-        "description": "Simulate the addition of a routine and get recommendations."
-    }
-]
+        {
+            "name": __CONSUMPTION_TAG,
+            "description": "Information about the energy consumption of the appliances in the home."
+        },
+        {
+            "name": __APPLIANCE_TAG,
+            "description": "Information about the appliances in the home."
+        },
+        {
+            "name": __ROUTINE_TAG,
+            "description": "Information about the registered routines."
+        },
+        {
+            "name": __SIMULATE_TAG,
+            "description": "Simulate the addition of a routine and get recommendations."
+        }
+    ]
 
     api = FastAPI(
         title=title,
@@ -68,55 +71,51 @@ def create_api(repository: DataRepository, config: EnergyConfig, title="Digital 
         openapi_tags=tags_metadata,
     )
 
+    @api.exception_handler(HTTPException)
+    async def http_exception_handler(request: fastapi.Request, exc: HTTPException):
+        return JSONResponse(status_code=exc.status_code, content=jsonable_encoder(schemas.BaseResponse(error=schemas.ErrorOut(message=exc.detail))))
+
+    @api.exception_handler(RequestValidationError)
+    async def validation_exception_handler(request: fastapi.Request, exc: RequestValidationError):
+        return JSONResponse(status_code=fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY,
+                            content=jsonable_encoder(schemas.BaseResponse(error=schemas.ErrorOut(message=str(exc)))))
+
     @api.exception_handler(ConflictError)
     async def conflict_error_handler(request: fastapi.Request, exc: ConflictError):
-        recommendations = [
-            r.message for r in exc.recommendations] if exc.recommendations else None
-        return JSONResponse(status_code=409, content={"error": str(exc), "recommendations": recommendations})
+        error = schemas.ErrorOut(message=str(exc), context=exc.context)
+        recommendations = [schemas.RecommendationOut(message=r.message, context=r.context)
+
+                           for r in exc.recommendations] if exc.recommendations else []
+        return JSONResponse(status_code=fastapi.status.HTTP_409_CONFLICT,
+                            content=jsonable_encoder(schemas.BaseResponse(error=error, recommendations=recommendations)))
 
     @api.post("/simulate", tags=[__SIMULATE_TAG])
-    async def post_simulate(routine_in: RoutineIn) -> list[RecommendationOut]:
+    async def post_simulate(routine_in: schemas.RoutineIn) -> schemas.BaseResponse:
         """Simulates the addition of a routine.
-
-        **Args**:
-        - `routine_in (RoutineIn)`: The routine to simulate.
-
-        **Returns**:
-        - `list[RecommendationOut]`: A list of recommendations about the routine.
         """
 
-        simulator = RoutineSimulator(matrix, costs, config.max_power)
-        recommendation = simulator.simulate(
+        # Try to add the routine to the matrix to see if any conflicts are thrown
+        matrix.add_routine(__routine_schema_to_model(routine_in, repository))
+
+        # If there are no conflicts, try to find the best start time for the routine
+        optimizer = RoutineOptimizer(matrix, costs)
+        recommendation = optimizer.find_best_start_time(
             __routine_schema_to_model(routine_in, repository))
-        return [__recommendation_model_to_schema(r) for r in recommendation]
+
+        return schemas.BaseResponse(recommendations=[schemas.RecommendationOut.model_validate(recommendation)])
 
     @api.post("/simulate/consumption/{when}", tags=[__SIMULATE_TAG])
-    async def post_simulate_consumption_total(routine_in: RoutineIn, when: datetime) -> float:
+    async def post_simulate_consumption_total(routine_in: schemas.RoutineIn, when: datetime) -> schemas.ValueResponse[float]:
         """Simulates the addition of a routine and returns the total consumption at a given date and time.
-
-        **Args**:
-        - `routine_in (RoutineIn)`: The routine to simulate.
-        - `when (datetime)`: The date and time.
-
-        **Returns**:
-        - `float`: The total consumption at the given date and time, in watts.
         """
 
-        simulator = RoutineSimulator(matrix, costs, config.max_power)
-        simulator.simulate(__routine_schema_to_model(routine_in, repository))
-        return simulator.simulated_consumption_matrix.total_consumption(when)
+        simulated = matrix.add_routine(
+            __routine_schema_to_model(routine_in, repository))
+        return schemas.ValueResponse(value=simulated.total_consumption(when))
 
     @api.post("/consumption/{appliance_id}/{when}", tags=[__SIMULATE_TAG])
-    async def post_simulate_consumption_appliance(routine_in: RoutineIn, appliance_id: int, when: datetime) -> float:
+    async def post_simulate_consumption_appliance(routine_in: schemas.RoutineIn, appliance_id: int, when: datetime) -> schemas.ValueResponse[float]:
         """Simulates the addition of a routine and returns the consumption of an appliance at a given date and time.
-
-        **Args**:
-        - `routine_in (RoutineIn)`: The routine to simulate.
-        - `appliance_id (int)`: The appliance ID.
-        - `when (datetime)`: The date and time.
-
-        **Returns**:
-        - `float`: The consumption of the appliance at the given date and time, in watts.
         """
 
         appliance = repository.get_appliance(appliance_id)
@@ -124,33 +123,20 @@ def create_api(repository: DataRepository, config: EnergyConfig, title="Digital 
         if appliance is None:
             raise errors.APPLIANCE_NOT_FOUND
 
-        simulator = RoutineSimulator(matrix, costs, config.max_power)
-        simulator.simulate(__routine_schema_to_model(routine_in, repository))
-        return simulator.simulated_consumption_matrix.consumption(appliance, when)
+        simulated = matrix.add_routine(
+            __routine_schema_to_model(routine_in, repository))
+        return schemas.ValueResponse(value=simulated.consumption(appliance, when))
 
     @api.get("/consumption/{when}", tags=[__CONSUMPTION_TAG])
-    async def get_consumption_total(when: datetime) -> float:
+    async def get_consumption_total(when: datetime) -> schemas.ValueResponse[float]:
         """Get the total consumption at a given date and time.
-
-        **Args**:
-        - `when (datetime)`: The date and time.
-
-        **Returns**:
-        - `float`: The total consumption at the given date and time, in watts.
         """
 
-        return matrix.total_consumption(when)
+        return schemas.ValueResponse(value=matrix.total_consumption(when))
 
     @api.get("/consumption/{appliance_id}/{when}", tags=[__CONSUMPTION_TAG])
-    async def get_consumption_appliance(appliance_id: int, when: datetime) -> float:
+    async def get_consumption_appliance(appliance_id: int, when: datetime) -> schemas.ValueResponse[float]:
         """Get the consumption of an appliance at a given date and time.
-
-        **Args**:
-        - `appliance_id (int)`: The appliance ID.
-        - `when (datetime)`: The date and time.
-
-        **Returns**:
-        - `float`: The consumption of the appliance at the given date and time, in watts.
         """
 
         appliance = repository.get_appliance(appliance_id)
@@ -158,17 +144,11 @@ def create_api(repository: DataRepository, config: EnergyConfig, title="Digital 
         if appliance is None:
             raise errors.APPLIANCE_NOT_FOUND
 
-        return matrix.consumption(appliance, when)
+        return schemas.ValueResponse(value=matrix.consumption(appliance, when))
 
     @api.get("/appliance/{appliance_id}", tags=[__APPLIANCE_TAG])
-    async def get_appliance(appliance_id: int) -> ApplianceOut:
+    async def get_appliance(appliance_id: int) -> schemas.ValueResponse[schemas.ApplianceOut]:
         """Get an appliance by ID.
-
-        **Args**:
-        - `appliance_id (int)`: The appliance ID.
-
-        **Returns**:
-        - `ApplianceOut`: The appliance.
         """
 
         appliance = repository.get_appliance(appliance_id)
@@ -176,27 +156,18 @@ def create_api(repository: DataRepository, config: EnergyConfig, title="Digital 
         if appliance is None:
             raise errors.APPLIANCE_NOT_FOUND
 
-        return ApplianceOut.model_validate(appliance)
+        return schemas.ValueResponse(value=schemas.ApplianceOut.model_validate(appliance))
 
     @api.get("/appliance", tags=[__APPLIANCE_TAG])
-    async def get_appliances() -> list[ApplianceOut]:
+    async def get_appliances() -> schemas.ListResponse[schemas.ApplianceOut]:
         """Get all appliances.
-
-        **Returns**:
-        - `list[ApplianceOut]`: The appliances.
         """
 
-        return [ApplianceOut.model_validate(a) for a in repository.get_appliances()]
+        return schemas.ListResponse(value=[schemas.ApplianceOut.model_validate(a) for a in repository.get_appliances()])
 
     @api.get("/routine/{routine_id}", tags=[__ROUTINE_TAG])
-    async def get_routine(routine_id: int) -> RoutineOut:
+    async def get_routine(routine_id: int) -> schemas.ValueResponse[schemas.RoutineOut]:
         """Get a routine by ID.
-
-        **Args**:
-        - `routine_id (int)`: The routine ID.
-
-        **Returns**:
-        - `RoutineOut`: The routine.
         """
 
         routine = repository.get_routine(routine_id)
@@ -204,22 +175,19 @@ def create_api(repository: DataRepository, config: EnergyConfig, title="Digital 
         if routine is None:
             raise errors.ROUTINE_NOT_FOUND
 
-        return RoutineOut.model_validate(routine)
+        return schemas.ValueResponse(value=schemas.RoutineOut.model_validate(routine))
 
     @api.get("/routine", tags=[__ROUTINE_TAG])
-    async def get_routines() -> list[RoutineOut]:
+    async def get_routines() -> schemas.ListResponse[schemas.RoutineOut]:
         """Get all routines.
-
-        **Returns**:
-        - `list[RoutineOut]`: The routines.
         """
 
-        return [RoutineOut.model_validate(r) for r in repository.get_routines()]
+        return schemas.ListResponse(value=[schemas.RoutineOut.model_validate(r) for r in repository.get_routines()])
 
     return api
 
 
-def __routine_schema_to_model(routine_in: RoutineIn, repository: DataRepository) -> Routine:
+def __routine_schema_to_model(routine_in: schemas.RoutineIn, repository: DataRepository) -> Routine:
     actions = []
 
     for action_in in routine_in.actions:
@@ -242,5 +210,5 @@ def __routine_schema_to_model(routine_in: RoutineIn, repository: DataRepository)
     return Routine(**routine_dict)
 
 
-def __recommendation_model_to_schema(recommendation: Recommendation) -> RecommendationOut:
-    return RecommendationOut(**vars(recommendation))
+def __recommendation_model_to_schema(recommendation: Recommendation) -> schemas.RecommendationOut:
+    return schemas.RecommendationOut(**vars(recommendation))

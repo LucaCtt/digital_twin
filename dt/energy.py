@@ -1,6 +1,7 @@
 from __future__ import annotations
 from abc import ABC
-from datetime import datetime
+from datetime import datetime, timedelta
+from typing import Any
 import numpy as np
 
 from config import EnergyConfig
@@ -12,8 +13,9 @@ class Recommendation(ABC):
     """A recommendation to solve a conflict or to improve the energy consumption.
     """
 
-    def __init__(self, message: str) -> None:
+    def __init__(self, message: str, context: dict[str, Any]) -> None:
         self.message = message
+        self.context = context
 
 
 class DisableRoutineRecommendation(Recommendation):
@@ -21,16 +23,23 @@ class DisableRoutineRecommendation(Recommendation):
     """
 
     def __init__(self, routine: Routine) -> None:
-        super().__init__(f"Disable routine {routine.name}.")
-        self.routine = routine
+        super().__init__(
+            f"Disable routine {routine.name}.", {"routine": routine})
+
+
+class BetterStartTimeRecommendation(Recommendation):
+    def __init__(self, new_time: datetime) -> None:
+        super().__init__(
+            f"The start time of the routine should be changed to {new_time}.", {"new_time": new_time})
 
 
 class ConflictError(Exception):
     """Error raised when there is a conflict in the routines.
     """
 
-    def __init__(self, message: str, recommendations: list[Recommendation] | None = None) -> None:
+    def __init__(self, message: str, context: dict[str, Any], recommendations: list[Recommendation] | None = None) -> None:
         super().__init__(message)
+        self.context = context
         self.recommendations = recommendations
 
 
@@ -41,14 +50,15 @@ class InconsistentRoutinesError(ConflictError):
     def __init__(self, first_routine: Routine, second_routine: Routine, first_action: RoutineAction, second_action: RoutineAction):
         recommendations: list[Recommendation] = [DisableRoutineRecommendation(
             first_routine), DisableRoutineRecommendation(second_routine)]
+        context = {
+            "first_routine": first_routine,
+            "second_routine": second_routine,
+            "first_action": first_action,
+            "second_action": second_action
+        }
 
         super().__init__(
-            f"Appliance {first_action.appliance.device} has conflicting modes.", recommendations)
-
-        self.first_routine = first_routine
-        self.second_routine = second_routine
-        self.first_action = first_action
-        self.second_action = second_action
+            f"Appliance {first_action.appliance.device} has conflicting modes.", context, recommendations)
 
 
 class MaxPowerExceededError(ConflictError):
@@ -58,11 +68,13 @@ class MaxPowerExceededError(ConflictError):
     def __init__(self, max_power: float, when: datetime, routines_to_disable: list[Routine]):
         recommendations: list[Recommendation] = [DisableRoutineRecommendation(
             r) for r in routines_to_disable]
+        context = {
+            "max_power": max_power,
+            "when": when,
+        }
 
         super().__init__(
-            f"Power consumption of the house is greater than {max_power} at {when}.", recommendations)
-        self.max_power = max_power
-        self.when = when
+            f"Power consumption of the house is greater than {max_power} at {when}.", context, recommendations)
 
 
 class ConsumptionsMatrix():
@@ -240,55 +252,41 @@ class CostsMatrix:
         return self.matrix[day_of_week, minute_of_day]
 
 
-class RoutineSimulator:
-    def __init__(self, consumptions_matrix: ConsumptionsMatrix, costs_matrix: CostsMatrix, max_power: float) -> None:
+class RoutineOptimizer:
+    def __init__(self, consumptions_matrix: ConsumptionsMatrix, costs_matrix: CostsMatrix) -> None:
         self.consumptions_matrix = consumptions_matrix
         self.costs_matrix = costs_matrix
-        self.max_power = max_power
 
-    def simulate(self, routine: Routine) -> list[Recommendation]:
-        self.simulated_consumption_matrix = self.consumptions_matrix.add_routine(routine)
-        return []
-    
+    def find_best_start_time(self, routine: Routine) -> BetterStartTimeRecommendation | None:
+        best_time = routine.when
+        best_cost = self.costs_matrix.get_cost(routine.when)
 
-    """
-    def find_best_start_time(self, routine: Routine) -> datetime:
-        existing_matrix = self.consumptions_matrix.raw_matrix()
-        simulated_matrix = ConsumptionsMatrix(self.consumptions_matrix.appliances, [
-                                              routine], self.consumptions_matrix.config).raw_matrix()
+        for minute in range(0, const.MINUTES_IN_DAY):
+            when = datetime.today().replace(
+                hour=minute//60, minute=minute % 60)
+            if self.__routine_cost(routine, when) <= best_cost:
 
-        e = np.zeros(existing_matrix.shape, dtype=np.int8)
+                # Try to add the routine to the matrix to see if any conflicts are thrown
+                try:
+                    self.consumptions_matrix.add_routine(routine)
+                    best_time = when
+                    best_cost = self.costs_matrix.get_cost(when)
+                except:
+                    continue
 
-        for minute in range(const.MINUTES_IN_DAY):
-            for appliance in self.consumptions_matrix.appliances:
-                e[minute, appliance.id] = self.solver.NumVar(
-                    0, self.max_power, f"e_{minute}_{appliance.id}")
+        if best_time == routine.when:
+            return None
 
-                appliance = next(
-                    a for a in self.consumptions_matrix.appliances if a.id == appliance.id)
-                mode = next(m for m in appliance.modes if m.id ==
-                            existing_matrix[minute, appliance.id])
-                self.solver.Add(e[minute, appliance.id]
-                                == mode.power_consumption)
+        return BetterStartTimeRecommendation(best_time)
 
-        x = np.zeros((const.MINUTES_IN_DAY, len(
-            routine.actions)), dtype=np.int8)
-        y = np.zeros((const.MINUTES_IN_DAY, len(
-            routine.actions)), dtype=np.int8)
+    def __routine_cost(self, routine: Routine, when: datetime) -> float:
+        return sum(self.__action_cost(action, when) for action in routine.actions)
 
-        for minute in range(const.MINUTES_IN_DAY):
-            for action in routine.actions:
-                x[minute, action.id] = self.solver.IntVar(
-                    0, 1, f"x_{minute}_{action.id}")
-                y[minute, action.id] = self.solver.IntVar(
-                    0, 1, f"x_{minute}_{action.id}")
+    def __action_cost(self, action: RoutineAction, when: datetime) -> float:
+        cost = 0
 
-                start = routine.when.hour * 60 + routine.when.minute
-                duration = action.duration if action.duration else const.MINUTES_IN_DAY - start
-                self.solver.Add([y[i, action.id] == 1 for i in range(
-                    minute + duration) if x[minute, action.id] == 1])
-                self.solver.Add(sum(x[:, action.id]) == 1)
-                self.solver.Add(sum(y[:, action.id]) == minute + duration)
+        duration = action.duration if action.duration else const.MINUTES_IN_DAY - when.minute
+        for time in (when + timedelta(n) for n in range(0, duration)):
+            cost += self.costs_matrix.get_cost(time)
 
-        return 0
-    """
+        return cost
