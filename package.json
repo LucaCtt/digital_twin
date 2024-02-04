@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "license": "MIT",
   "type": "module",
-  "source": "dt/frontend/index.html",
+  "source": "frontend/index.html",
   "browserslist": "defaults",
   "scripts": {
     "dev": "parcel",
