@@ -5,6 +5,9 @@
     <title>Digital Twin Showcase</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
+    <link rel="icon" type="image/png" href="./assets/favicon.png" />
+
     <link rel="stylesheet" href="./style.css" />
 
     <script type="module" src="./index.js"></script>
@@ -25,10 +28,11 @@
   <body
     class="format mx-auto flex max-w-screen-xl flex-col justify-between gap-8 bg-white px-4 pb-16 pt-8 dark:format-invert dark:bg-gray-900 lg:pb-24 lg:pt-16"
   >
+    <!-- Error banner -->
     <div
       id="api-error-banner"
       tabindex="-1"
-      class="fixed start-0 top-0 z-50 flex hidden w-full justify-between bg-red-200 p-2 dark:bg-red-800"
+      class="fixed start-0 top-0 z-50 flex hidden w-full justify-between bg-red-200 p-2 text-red-900 dark:bg-red-900 dark:text-white"
     >
       <div class="mx-auto flex items-center">
         <p class="flex items-center text-sm font-normal">
@@ -87,7 +91,7 @@
           id="theme-toggle"
           type="button"
           data-tooltip-target="tooltip-theme"
-          class="rounded-full p-2.5 text-sm hover:bg-green-200 focus:outline-none focus:ring-4 focus:ring-green-300 dark:text-white dark:hover:bg-green-800 dark:focus:ring-green-700"
+          class="rounded-full p-2.5 text-sm text-gray-900 hover:bg-green-200 focus:outline-none focus:ring-4 focus:ring-green-300 dark:text-white dark:hover:bg-green-800 dark:focus:ring-green-700"
         >
           <!-- Dark icon -->
           <svg
@@ -133,14 +137,13 @@
           id="goto-api"
           type="button"
           data-tooltip-target="tooltip-api"
-          class="rounded-full p-2.5 text-sm hover:bg-green-200 focus:outline-none focus:ring-4 focus:ring-green-300 dark:text-white dark:hover:bg-green-800 dark:focus:ring-green-700"
+          class="rounded-full p-2.5 text-sm text-gray-900 hover:bg-green-200 focus:outline-none focus:ring-4 focus:ring-green-300 dark:text-white dark:hover:bg-green-800 dark:focus:ring-green-700"
         >
           <svg
             class="h-6 w-6"
             fill="currentColor"
             aria-hidden="true"
             xmlns="http://www.w3.org/2000/svg"
-            fill="currentColor"
             viewBox="0 0 24 24"
           >
             <path
@@ -163,10 +166,41 @@
     </header>
 
     <!-- Main content -->
-    <main class="w-full">
+    <main class="flex w-full flex-col gap-8">
+      <!-- Stats -->
+      <div class="flex flex-row justify-between gap-8">
+        <div
+          class="h-full w-full max-w-xs rounded-lg bg-gray-100 p-8 dark:bg-gray-800"
+        >
+          <h5
+            class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white"
+          >
+            Total Consumption Now
+          </h5>
+          <p
+            class="mb-3 text-center text-3xl font-bold text-gray-600 dark:text-gray-400"
+          >
+            <span id="total-consumption">0</span> kW
+          </p>
+        </div>
+
+        <div class="w-full rounded-lg bg-gray-100 p-8 dark:bg-gray-800">
+          <h5
+            class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white"
+          >
+            Active Appliances
+          </h5>
+          <p
+            class="mb-3 text-center text-3xl font-bold text-gray-600 dark:text-gray-400"
+          >
+            <span id="total-consumption">0</span> kW
+          </p>
+        </div>
+      </div>
+
       <!-- Simulate Routines -->
       <div
-        class="flex flex-col justify-start rounded-lg bg-gray-100 p-4 dark:bg-gray-800"
+        class="flex flex-col justify-between rounded-lg bg-gray-100 p-4 dark:bg-gray-800"
       >
         <h2 class="m-4">Simulate Routines</h2>
 
@@ -176,7 +210,7 @@
           data-tabs-toggle="#default-tab-content"
           role="tablist"
         >
-          <li class="me-2" role="presentation">
+          <li class="mb-0 me-2" role="presentation">
             <button
               class="inline-block rounded-t-lg border-b-2 p-4"
               id="no-conflict-tab"
@@ -189,7 +223,7 @@
               No conflicts
             </button>
           </li>
-          <li class="me-2" role="presentation">
+          <li class="mb-0 me-2" role="presentation">
             <button
               class="inline-block rounded-t-lg border-b-2 p-4 hover:border-gray-300 hover:text-gray-600 dark:hover:text-gray-300"
               id="dashboard-tab"
@@ -202,7 +236,7 @@
               Dashboard
             </button>
           </li>
-          <li class="me-2" role="presentation">
+          <li class="mb-0 me-2" role="presentation">
             <button
               class="inline-block rounded-t-lg border-b-2 p-4 hover:border-gray-300 hover:text-gray-600 dark:hover:text-gray-300"
               id="settings-tab"
@@ -215,7 +249,7 @@
               Settings
             </button>
           </li>
-          <li role="presentation">
+          <li class="mb-0" role="presentation">
             <button
               class="inline-block rounded-t-lg border-b-2 p-4 hover:border-gray-300 hover:text-gray-600 dark:hover:text-gray-300"
               id="contacts-tab"
@@ -237,53 +271,55 @@
             role="tabpanel"
             aria-labelledby="no-conflict-tab"
           >
-            <table
-              class="w-full rounded-lg bg-white text-left text-sm dark:bg-gray-900 dark:text-white rtl:text-right"
-            >
-              <tbody>
-                <tr class="border-b dark:border-gray-700">
-                  <td class="px-6 py-4">
-                    <strong>Routine name:</strong>
-                  </td>
-                  <td class="px-6 py-4">Start AC in the morning</td>
-                </tr>
-                <tr class="border-b dark:border-gray-700">
-                  <td class="px-6 py-4">
-                    <strong>Appliance:</strong>
-                  </td>
-                  <td class="px-6 py-4">Air Conditioning</td>
-                </tr>
-                <tr class="border-b dark:border-gray-700">
-                  <td class="px-6 py-4">
-                    <strong>Operation Mode:</strong>
-                  </td>
-                  <td class="px-6 py-4">Heat</td>
-                </tr>
-                <tr class="border-b dark:border-gray-700">
-                  <td class="px-6 py-4">
-                    <strong>When</strong>
-                  </td>
-                  <td class="px-6 py-4">8:00</td>
-                </tr>
-                <tr>
-                  <td class="px-6 py-4">
-                    <strong>Duration:</strong>
-                  </td>
-                  <td class="px-6 py-4">3 hours</td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="flex w-full flex-col justify-between gap-8">
+              <table
+                class="rounded-lg bg-white text-left text-sm dark:bg-gray-900 dark:text-white rtl:text-right m-0"
+              >
+                <tbody>
+                  <tr class="border-b dark:border-gray-700">
+                    <td class="px-6 py-4">
+                      <strong>Routine name:</strong>
+                    </td>
+                    <td class="px-6 py-4">Start AC in the morning</td>
+                  </tr>
+                  <tr class="border-b dark:border-gray-700">
+                    <td class="px-6 py-4">
+                      <strong>Appliance:</strong>
+                    </td>
+                    <td class="px-6 py-4">Air Conditioning</td>
+                  </tr>
+                  <tr class="border-b dark:border-gray-700">
+                    <td class="px-6 py-4">
+                      <strong>Operation Mode:</strong>
+                    </td>
+                    <td class="px-6 py-4">Heat</td>
+                  </tr>
+                  <tr class="border-b dark:border-gray-700">
+                    <td class="px-6 py-4">
+                      <strong>When:</strong>
+                    </td>
+                    <td class="px-6 py-4">8:00</td>
+                  </tr>
+                  <tr>
+                    <td class="px-6 py-4">
+                      <strong>Duration:</strong>
+                    </td>
+                    <td class="px-6 py-4">3 hours</td>
+                  </tr>
+                </tbody>
+              </table>
 
-            <div class="flex w-full flex-col gap-4">
-              <div
-                class="h-full rounded-lg bg-yellow-100 px-6 py-4 dark:bg-yellow-600"
+              <button
+                type="button"
+                class="me-2 w-full rounded-lg bg-green-500 px-5 py-2.5 text-sm text-white hover:bg-green-600 focus:outline-none focus:ring-4 focus:ring-green-300 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
               >
-                <h3>Recommendations</h3>
-              </div>
-              <div
-                class="h-full rounded-lg bg-red-100 px-6 py-4 dark:bg-red-900"
-              >
-                <h3>Errors</h3>
+                Simulate routine addition
+              </button>
+            </div>
+
+            <div class="w-full bg-white rounded-lg p-4 dark:bg-gray-900">
+              <div id="simulate-no-result" class="h-full w-full flex justify-center items-center text-gray-400 dark:text-gray-400">
+                Simulation result will be shown here
               </div>
             </div>
           </div>
@@ -334,6 +370,18 @@
             </p>
           </div>
         </div>
+      </div>
+
+      <div
+        class="flex flex-col justify-start rounded-lg bg-gray-100 p-4 dark:bg-gray-800"
+      >
+        <h2 class="m-4">Routines</h2>
+      </div>
+
+      <div
+        class="flex flex-col justify-start rounded-lg bg-gray-100 p-4 dark:bg-gray-800"
+      >
+        <h2 class="m-4">Appliances</h2>
       </div>
     </main>
   </body>

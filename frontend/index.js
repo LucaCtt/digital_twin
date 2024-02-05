@@ -2,10 +2,6 @@ import "flowbite";
 
 document.getElementById("goto-api").href = process.env.BACKEND_URL;
 
-fetch(process.env.BACKEND_URL + "/appliances").catch((err) => {
-  document.getElementById("api-error-banner").classList.remove("hidden");
-});
-
 const themeToggleDarkIcon = document.getElementById("theme-toggle-dark-icon");
 const themeToggleLightIcon = document.getElementById("theme-toggle-light-icon");
 
@@ -87,3 +83,11 @@ document.querySelectorAll("#default-tab li button").forEach((tab) => {
 
   new MutationObserver(callback).observe(tab, { attributes: true });
 });
+
+fetch(process.env.BACKEND_URL + "/consumption" + new Date().toISOString())
+  .then((response) => {
+    document.getElementById("total-consumption").innerText = response.value;
+  })
+  .catch((err) =>
+    document.getElementById("api-error-banner").classList.remove("hidden"),
+  );

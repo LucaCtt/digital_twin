@@ -8,7 +8,7 @@ This script plots the consumptions matrix of the appliances in the database.
 import os
 import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
+from matplotlib import cm
 from matplotlib import patheffects
 import numpy as np
 
@@ -31,8 +31,8 @@ plt.rcParams['savefig.bbox'] = "tight"
 def __get_appliance_name(appliance: Appliance):
     if appliance.device in ["lamp", "television"]:
         return f"{appliance.device.title()} ({appliance.location})"
-    else:
-        return f"{appliance.device.title()}"
+
+    return f"{appliance.device.title()}"
 
 
 def __prepare_matrix_figure(appliances: list[Appliance], routines: list[Routine], config: EnergyConfig, title: str = "Consumptions"):

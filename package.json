@@ -10,11 +10,10 @@
     "build": "parcel build"
   },
   "devDependencies": {
-    "@prettier/plugin-pug": "^3.0.0",
     "flowbite-typography": "^1.0.3",
     "parcel": "^2.11.0",
     "postcss": "^8.4.33",
-    "prettier": "3.2.4",
+    "prettier": "^3.2.4",
     "prettier-plugin-tailwindcss": "^0.5.11",
     "tailwindcss": "^3.4.1"
   },
