@@ -1,8 +1,11 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ["./frontend/**/*.{html,js}", "./node_modules/flowbite/**/*.js"],
+  content: [
+    "./frontend/**/*.{html,js,jsx}",
+    "node_modules/flowbite-react/lib/esm/**/*.js",
+  ],
   theme: {
     extend: {},
   },
-  plugins: [require("flowbite/plugin"), require("flowbite-typography"),],
+  plugins: [require("flowbite/plugin"), require("flowbite-typography")],
 };
