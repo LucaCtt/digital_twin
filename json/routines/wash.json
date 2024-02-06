@@ -1,6 +1,6 @@
 {
-    "id": 1,
-    "name": "Lavaggio",
+    "id": 5,
+    "name": "Wash everything",
     "when": [
         "Today",
         "14:00"

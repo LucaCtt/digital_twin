@@ -1,6 +1,6 @@
 {
     "id": 2,
-    "name": "Lavaggio",
+    "name": "Switch on lights in the evening",
     "when": [
         "Today",
         "16:00"

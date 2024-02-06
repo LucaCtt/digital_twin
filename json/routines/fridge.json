@@ -1,6 +1,6 @@
 {
     "id": 1,
-    "name": "fridge",
+    "name": "Run fridge all day",
     "when": [
         "Today",
         "00:00"
