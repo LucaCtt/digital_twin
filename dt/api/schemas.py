@@ -34,6 +34,9 @@ class ApplianceOut(BaseModel):
 
     id: int
     device: str
+    manufacturer: str
+    model: str
+    location: str
     modes: list[OperationModeOut]
 
     # Enable creating an instance of this schema from a model.

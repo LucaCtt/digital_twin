@@ -130,6 +130,8 @@ def read_appliance_json(filepath: str) -> Appliance:
 
         id = data["id"]
         device = data["device"]
+        manufacturer = data["manufacturer"]
+        model = data["model"]
         location = data["location"]
         modes = []
 
@@ -143,7 +145,7 @@ def read_appliance_json(filepath: str) -> Appliance:
                 mode_id, mode_name, power_consumption, default_duration)
             modes.append(mode)
 
-        return Appliance(id, device, location, modes)
+        return Appliance(id, device, manufacturer, model, location, modes)
 
 
 def read_appliances_json(dir_path: str) -> list[Appliance]:

@@ -20,7 +20,7 @@ from const import MINUTES_IN_DAY
 
 matplotlib.use("GTK4Agg")
 
-SAVE = False
+SAVE = True
 
 plt.rcParams['axes.labelsize'] = "medium"
 plt.rcParams['font.size'] = 11

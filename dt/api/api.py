@@ -4,12 +4,14 @@ This module provides the REST API for the Digital Twin, implemented using [FastA
 """
 
 from datetime import datetime
+import os
 from fastapi import FastAPI
 import fastapi
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 from data import DataRepository, Routine, RoutineAction
 from config import EnergyConfig
@@ -69,6 +71,14 @@ def create_api(repository: DataRepository, config: EnergyConfig, title="Digital 
         redoc_url=None,  # Disable Redoc
         summary="API to interact with the Digital Twin.",
         openapi_tags=tags_metadata,
+    )
+
+    api.add_middleware(
+        CORSMiddleware,
+        allow_origins=[os.environ["FRONTEND_URL"]],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
     @api.exception_handler(HTTPException)

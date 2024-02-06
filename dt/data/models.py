@@ -36,13 +36,18 @@ class Appliance:
     Attributes:
         id (int): The id of the appliance.
         device (str): The type of device of the appliance (e.g. fridge, microwave, etc.)
+        manufacturer (str): The manufacturer of the appliance.
+        model (str): The model of the appliance.
+        location (str): The location of the appliance (e.g. kitchen, bedroom, etc.)
         modes (list[OperationMode]): The operation modes of the appliance.
         An "off" mode is required, and it's a good practice to have it as the first one in the list.
     """
 
-    def __init__(self, id: int, device: str, location: str, modes: list[OperationMode]):
+    def __init__(self, id: int, device: str, manufacturer: str, model: str, location: str, modes: list[OperationMode]):
         self.id = id
         self.device = device
+        self.manufacturer = manufacturer
+        self.model = model
         self.location = location
         self.modes = modes
 
