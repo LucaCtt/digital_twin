@@ -2,7 +2,7 @@ import { List } from "flowbite-react";
 
 const MostConsumingAppliances = ({ appliancesConsumption, className }) => (
   <div
-    className={`flex max-w-sm flex-col justify-between rounded-lg bg-gray-100 p-8 dark:bg-gray-800 ${className}`}
+    className={`flex lg:max-w-sm flex-col justify-between rounded-lg bg-gray-100 p-8 dark:bg-gray-800 ${className}`}
   >
     <h2>Most Consuming Appliances</h2>
     <div className="flex items-center justify-center h-full">

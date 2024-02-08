@@ -15,7 +15,7 @@ const ConsumptionNow = ({ consumption, className }) => {
 
   return (
     <div
-      className={`flex max-w-sm flex-col justify-between rounded-lg bg-gray-100 p-8 dark:bg-gray-800 ${colorClass} ${className}`}
+      className={`flex lg:max-w-sm flex-col justify-between rounded-lg bg-gray-100 p-8 dark:bg-gray-800 ${colorClass} ${className}`}
     >
       <h2>Total Consumption Now</h2>
       <div className="flex h-full items-center justify-center">

@@ -1,10 +1,7 @@
 {
-    "id": 0,
-    "name": "Test 1",
-    "when": [
-        "Today",
-        "8:30"
-    ],
+    "id": 30,
+    "name": "No Conflict",
+    "when": "2024-02-08T16:28:00Z",
     "enabled": true,
     "actions": [
         {

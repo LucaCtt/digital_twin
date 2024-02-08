@@ -5,7 +5,7 @@ This module provides the REST API for the Digital Twin, implemented using [FastA
 
 from datetime import datetime
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 import fastapi
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
@@ -88,7 +88,7 @@ def create_api(repository: DataRepository, config: EnergyConfig, title="Digital 
         See [FastAPI documentation](https://fastapi.tiangolo.com/tutorial/handling-errors/#override-the-httpexception-error-handler) for more information.
         """
 
-        return JSONResponse(status_code=exc.status_code, content=jsonable_encoder(schemas.BaseResponse(error=schemas.ErrorOut(message=exc.detail))))
+        return JSONResponse(status_code=exc.status_code, content=jsonable_encoder(schemas.BaseResponse(errors=[schemas.ErrorOut(message=exc.detail)])))
 
     @api.exception_handler(RequestValidationError)
     async def validation_exception_handler(request: fastapi.Request, exc: RequestValidationError):
@@ -98,7 +98,7 @@ def create_api(repository: DataRepository, config: EnergyConfig, title="Digital 
         """
 
         return JSONResponse(status_code=fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY,
-                            content=jsonable_encoder(schemas.BaseResponse(error=schemas.ErrorOut(message=str(exc)))))
+                            content=jsonable_encoder(schemas.BaseResponse(errors=[schemas.ErrorOut(message=str(exc))])))
 
     @api.exception_handler(ConflictError)
     async def conflict_error_handler(request: fastapi.Request, exc: ConflictError):
@@ -110,20 +110,19 @@ def create_api(repository: DataRepository, config: EnergyConfig, title="Digital 
 
                            for r in exc.recommendations] if exc.recommendations else []
         return JSONResponse(status_code=fastapi.status.HTTP_409_CONFLICT,
-                            content=jsonable_encoder(schemas.BaseResponse(error=error, recommendations=recommendations)))
+                            content=jsonable_encoder(schemas.BaseResponse(errors=[error], recommendations=recommendations)))
 
     @api.post("/simulate", tags=[__SIMULATE_TAG])
     async def post_simulate(routine_in: schemas.RoutineIn) -> schemas.BaseResponse:
         """Simulates the addition of a routine.
         """
-
+        routine_model = __routine_schema_to_model(routine_in, repository)
         # Try to add the routine to the matrix to see if any conflicts are thrown
-        matrix.add_routine(__routine_schema_to_model(routine_in, repository))
+        matrix.add_routine(routine_model)
 
         # If there are no conflicts, try to find the best start time for the routine
         optimizer = RoutineOptimizer(matrix, costs)
-        recommendation = optimizer.find_best_start_time(
-            __routine_schema_to_model(routine_in, repository))
+        recommendation = optimizer.find_best_start_time(routine_model)
 
         return schemas.BaseResponse(recommendations=[schemas.RecommendationOut.model_validate(recommendation)])
 
@@ -165,6 +164,13 @@ def create_api(repository: DataRepository, config: EnergyConfig, title="Digital 
         """
 
         return schemas.ValueResponse(value=matrix.total_consumption(when))
+
+    @api.get("/consumption/total/", tags=[__CONSUMPTION_TAG])
+    async def get_consumption_total_list(when: list[datetime] = Query()) -> schemas.ListResponse[float]:
+        """Get the total consumption for the given dates and times.
+        """
+
+        return schemas.ListResponse(value=[matrix.total_consumption(w) for w in when])
 
     @api.get("/consumption/{appliance_id}/{when}", tags=[__CONSUMPTION_TAG])
     async def get_consumption_appliance(appliance_id: int, when: datetime) -> schemas.ValueResponse[float]:
@@ -244,9 +250,12 @@ def __routine_schema_to_model(routine_in: schemas.RoutineIn, repository: DataRep
         if mode is None:
             raise errors.APPLIANCE_INVALID
 
-        action_dict = vars(action_in)
+        action_dict = vars(action_in).copy()
         action_dict["appliance"] = appliance
         action_dict["mode"] = mode
+        action_dict["duration"] = action_dict["duration"] // 60
+        action_dict.pop("appliance_id")
+        action_dict.pop("mode_id")
 
         actions.append(RoutineAction(**action_dict))
 

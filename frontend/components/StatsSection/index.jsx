@@ -9,17 +9,17 @@ const StatsSection = ({
 }) => {
   return (
     <div className="flex flex-col justify-between gap-8 lg:flex-row">
-      <div className="flex flex-col justify-between gap-8 md:flex-row lg:flex-col">
+      <div className="flex flex-col justify-between gap-8 md:flex-row lg:flex-col flex-1" >
         <ConsumptionNow
           consumption={consumptionNow}
-          className="h-full w-full"
+          className="flex-1"
         />
         <MostConsumingAppliances
           appliancesConsumption={mostConsumingAppliances}
-          className="h-full w-full"
+          className="flex-1"
         />
       </div>
-      <DayConsumptionChart data={consumptionsPerHour} className="w-full" />
+      <DayConsumptionChart data={consumptionsPerHour} className="w-full min-h-96" />
     </div>
   );
 };

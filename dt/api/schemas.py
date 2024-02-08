@@ -87,6 +87,7 @@ class RoutineIn(BaseModel):
     """The schema for an input routine.
     """
 
+    id: int
     name: str
     when: datetime
     actions: list[RoutineActionIn]
@@ -122,7 +123,7 @@ class ErrorOut(BaseModel):
     """
 
     message: str
-    context: dict[str, Any] | None = None
+    context: dict[str, Any] = {}
 
 
 class BaseResponse(BaseModel):
@@ -131,8 +132,8 @@ class BaseResponse(BaseModel):
     The list of recommendations should always be null rather than an empty list.
     """
 
-    error: ErrorOut | None = None
-    recommendations: list[RecommendationOut] | None = None
+    errors: list[ErrorOut] = []
+    recommendations: list[RecommendationOut] = []
 
 
 T = TypeVar("T")
