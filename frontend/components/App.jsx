@@ -1,12 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Flowbite } from "flowbite-react";
 import ErrorBanner from "./ErrorBanner";
 import Title from "./Title";
 import AppliancesList from "./AppliancesList";
 import RoutinesList from "./RoutinesList";
 import SimulateSection from "./SimulateSection";
-
-const apiFetch = (path) => fetch(process.env.BACKEND_URL + path);
+import ConsumptionNow from "./ConsumptionNow";
+import MostConsumingAppliances from "./MostConsumingAppliances";
+import DayConsumptionChart from "./DayConsumptionChart";
 
 const customTheme = {
   button: {
@@ -35,12 +36,36 @@ const customTheme = {
 };
 
 const App = () => {
+  const [timeNow, setTimeNow] = useState(new Date().toISOString());
+  const [consumptionNow, setConsumptionNow] = useState(0);
+  const [consumptionsPerHour, setConsumptionsPerHour] = useState(
+    Array.from({ length: 24 }, (_, i) => 0),
+  );
+  const [mostConsumingAppliances, setMostConsumingAppliances] = useState([]);
   const [appliances, setAppliances] = useState([]);
   const [routines, setRoutines] = useState([]);
   const [showErrorBanner, setShowErrorBanner] = useState(false);
 
-  useEffect(() => {
-    const appliancesReq = apiFetch("/appliance")
+  const apiFetch = (path) =>
+    fetch(`${process.env.BACKEND_URL}${path}`)
+      .then((response) => {
+        setShowErrorBanner(false);
+        return response;
+      })
+      .catch((err) => {
+        setShowErrorBanner(true);
+        console.error(err);
+        throw err;
+      });
+
+  const fetchData = () => {
+    setTimeNow(new Date().toISOString());
+
+    apiFetch(`/consumption/total/${timeNow}`)
+      .then((response) => response.json())
+      .then((data) => setConsumptionNow(data.value));
+
+    apiFetch("/appliance")
       .then((response) => response.json())
       .then((data) => {
         setAppliances(
@@ -48,15 +73,58 @@ const App = () => {
         );
       });
 
-    const routinesReq = apiFetch("/routine")
+    apiFetch("/routine")
       .then((response) => response.json())
       .then((data) => {
         setRoutines(data.value.sort((a, b) => a.when.localeCompare(b.when)));
       });
 
-    Promise.all([appliancesReq, routinesReq])
-      .then(() => setShowErrorBanner(false))
-      .catch(() => setShowErrorBanner(true));
+    const tempConsumptionsPerHour = Array.from({ length: 24 }, (_, i) => 0);
+    const promises = [];
+    for (let hour = 0; hour < 24; hour++) {
+      const timeAtHour = new Date(timeNow).setHours(hour);
+      promises.push(
+        apiFetch(`/consumption/total/${timeAtHour}`)
+          .then((response) => response.json())
+          .then((data) => {
+            tempConsumptionsPerHour[hour] = data.value;
+          }),
+      );
+    }
+    Promise.all(promises).then(() =>
+      setConsumptionsPerHour(tempConsumptionsPerHour),
+    );
+  };
+
+  useEffect(() => {
+    if (appliances.length === 0) return;
+
+    apiFetch(`/consumption/${timeNow}`)
+      .then((response) => response.json())
+      .then((data) => {
+        const mostConsuming = data.value
+          .sort((a, b) => b.consumption - a.consumption)
+          .slice(0, 3)
+          .map(({ appliance_id, consumption }) => {
+            const appliance = appliances.find(
+              (appliance) => appliance.id === appliance_id,
+            );
+            return { appliance: appliance, consumption: consumption };
+          });
+
+        setMostConsumingAppliances(mostConsuming);
+      });
+  }, [appliances]);
+
+  useEffect(() => {
+    // Fetch the data on component mount
+    fetchData();
+
+    // Then fetch the data every 5 seconds
+    const intervalId = setInterval(fetchData, 5000);
+
+    // Clear the interval when the component is unmounted
+    return () => clearInterval(intervalId);
   }, []);
 
   return (
@@ -64,6 +132,19 @@ const App = () => {
       <div className="flex flex-col justify-between gap-8">
         <ErrorBanner visible={showErrorBanner} />
         <Title />
+        <div className="flex flex-col justify-between gap-8 lg:flex-row">
+          <div className="flex flex-col justify-between gap-8 md:flex-row lg:flex-col">
+            <ConsumptionNow
+              consumption={consumptionNow}
+              className="h-full w-full"
+            />
+            <MostConsumingAppliances
+              appliancesConsumption={mostConsumingAppliances}
+              className="h-full w-full"
+            />
+          </div>
+          <DayConsumptionChart data={consumptionsPerHour} className="w-full" />
+        </div>
         <SimulateSection />
         <AppliancesList appliances={appliances} />
         <RoutinesList routines={routines} />

@@ -3,7 +3,7 @@ import SimulatedRoutineDetails from "./SimulatedRoutineDetails";
 import SimulationResult from "./SimulationResult";
 
 const SimulationBox = ({ routine, onSimulate, result }) => {
-  <div className="flex hidden flex-row gap-8 p-4">
+  <div className="flex hidden flex-col md:flex-row gap-8 p-4">
     <div className="flex w-full flex-col justify-between gap-8">
       <SimulatedRoutineDetails routine={routine} />
       <Button

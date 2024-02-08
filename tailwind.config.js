@@ -7,5 +7,8 @@ export default {
   theme: {
     extend: {},
   },
-  plugins: [require("flowbite/plugin"), require("flowbite-typography")],
+  plugins: [
+    require("flowbite/plugin")({ charts: true }),
+    require("flowbite-typography"),
+  ],
 };

@@ -148,9 +148,18 @@ def create_api(repository: DataRepository, config: EnergyConfig, title="Digital 
 
         simulated = matrix.add_routine(
             __routine_schema_to_model(routine_in, repository))
-        return schemas.ValueResponse(value=simulated.consumption(appliance, when))
+        return schemas.ValueResponse(value=simulated.appliance_consumption(appliance, when))
 
     @api.get("/consumption/{when}", tags=[__CONSUMPTION_TAG])
+    async def get_consumptions(when: datetime) -> schemas.ListResponse[schemas.ApplianceConsumption]:
+        """Get the per-appliance consumption at a given date and time.
+        """
+
+        consumptions = matrix.consumptions(when)
+
+        return schemas.ListResponse(value=[schemas.ApplianceConsumption(appliance_id=a.id, consumption=c) for a, c in consumptions.items()])
+
+    @api.get("/consumption/total/{when}", tags=[__CONSUMPTION_TAG])
     async def get_consumption_total(when: datetime) -> schemas.ValueResponse[float]:
         """Get the total consumption at a given date and time.
         """
@@ -167,7 +176,7 @@ def create_api(repository: DataRepository, config: EnergyConfig, title="Digital 
         if appliance is None:
             raise errors.APPLIANCE_NOT_FOUND
 
-        return schemas.ValueResponse(value=matrix.consumption(appliance, when))
+        return schemas.ValueResponse(value=matrix.appliance_consumption(appliance, when))
 
     @api.get("/appliance/{appliance_id}", tags=[__APPLIANCE_TAG])
     async def get_appliance(appliance_id: int) -> schemas.ValueResponse[schemas.ApplianceOut]:

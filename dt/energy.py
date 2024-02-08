@@ -174,7 +174,29 @@ class ConsumptionsMatrix():
 
         return total_consumption
 
-    def consumption(self, appliance: Appliance, when: datetime) -> float:
+    def consumptions(self, when: datetime) -> dict[Appliance, float]:
+        """Calculate the consumption of the appliances at a given time.
+
+        Args:
+            when (datetime): The time to calculate the consumption.
+
+        Returns:
+            dict[Appliance, float]: The consumption of the appliances at the given time.
+        """
+
+        minute_of_day = when.hour * 60 + when.minute
+        modes_ids = self.matrix[minute_of_day]
+
+        dict = {}
+        for appliance_id, mode_id in enumerate(modes_ids):
+            appliance = next(
+                a for a in self.appliances if a.id == appliance_id)
+            mode = next(m for m in appliance.modes if m.id == mode_id)
+            dict[appliance] = mode.power_consumption
+
+        return dict
+
+    def appliance_consumption(self, appliance: Appliance, when: datetime) -> float:
         """Calculate the consumption of a specific appliance at a given time.
 
         Args:

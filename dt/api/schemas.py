@@ -93,9 +93,17 @@ class RoutineIn(BaseModel):
     enabled: bool = True
 
 
+class ApplianceConsumption(BaseModel):
+    """The schema for an appliance consumption.
+    """
+
+    appliance_id: int
+    consumption: float
+
+
 class RecommendationOut(BaseModel):
     """The schema for a recommendation.
-    
+
     The context represents additional information about the recommendation.
     """
 
