@@ -1,13 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
 import { Flowbite } from "flowbite-react";
 import ErrorBanner from "./ErrorBanner";
-import Title from "./Title";
-import AppliancesList from "./AppliancesList";
-import RoutinesList from "./RoutinesList";
+import TitleBar from "./TitleBar";
+import AppliancesSection from "./AppliancesSection";
+import RoutinesSection from "./RoutinesSection";
 import SimulateSection from "./SimulateSection";
-import ConsumptionNow from "./ConsumptionNow";
-import MostConsumingAppliances from "./MostConsumingAppliances";
-import DayConsumptionChart from "./DayConsumptionChart";
+import StatsSection from "./StatsSection";
+
+import * as noConflict from "../test-routines/no_conflict.json";
 
 const customTheme = {
   button: {
@@ -39,7 +39,7 @@ const App = () => {
   const [timeNow, setTimeNow] = useState(new Date().toISOString());
   const [consumptionNow, setConsumptionNow] = useState(0);
   const [consumptionsPerHour, setConsumptionsPerHour] = useState(
-    Array.from({ length: 24 }, (_, i) => 0),
+    new Array(24).fill(0),
   );
   const [mostConsumingAppliances, setMostConsumingAppliances] = useState([]);
   const [appliances, setAppliances] = useState([]);
@@ -52,6 +52,7 @@ const App = () => {
         setShowErrorBanner(false);
         return response;
       })
+      .then((response) => response.json())
       .catch((err) => {
         setShowErrorBanner(true);
         console.error(err);
@@ -61,59 +62,43 @@ const App = () => {
   const fetchData = () => {
     setTimeNow(new Date().toISOString());
 
-    apiFetch(`/consumption/total/${timeNow}`)
-      .then((response) => response.json())
-      .then((data) => setConsumptionNow(data.value));
-
-    apiFetch("/appliance")
-      .then((response) => response.json())
-      .then((data) => {
-        setAppliances(
-          data.value.sort((a, b) => a.device.localeCompare(b.device)),
-        );
-      });
-
-    apiFetch("/routine")
-      .then((response) => response.json())
-      .then((data) => {
-        setRoutines(data.value.sort((a, b) => a.when.localeCompare(b.when)));
-      });
-
-    const tempConsumptionsPerHour = Array.from({ length: 24 }, (_, i) => 0);
-    const promises = [];
-    for (let hour = 0; hour < 24; hour++) {
-      const timeAtHour = new Date(timeNow).setHours(hour);
-      promises.push(
-        apiFetch(`/consumption/total/${timeAtHour}`)
-          .then((response) => response.json())
-          .then((data) => {
-            tempConsumptionsPerHour[hour] = data.value;
-          }),
-      );
-    }
-    Promise.all(promises).then(() =>
-      setConsumptionsPerHour(tempConsumptionsPerHour),
+    apiFetch(`/consumption/total/${timeNow}`).then((data) =>
+      setConsumptionNow(data.value),
     );
+
+    apiFetch("/appliance").then((data) => {
+      setAppliances(
+        data.value.sort((a, b) => a.device.localeCompare(b.device)),
+      );
+    });
+
+    apiFetch("/routine").then((data) => {
+      setRoutines(data.value.sort((a, b) => a.when.localeCompare(b.when)));
+    });
+
+    const hourPromises = Array.from({ length: 24 }, (_, hour) => {
+      const dateAtHour = new Date(timeNow);
+      dateAtHour.setHours(hour, 0);
+
+      apiFetch(`/consumption/total/${dateAtHour}`).then((data) => data.value);
+    });
+    Promise.all(hourPromises).then((result) => setConsumptionsPerHour(result));
   };
 
   useEffect(() => {
-    if (appliances.length === 0) return;
+    apiFetch(`/consumption/${timeNow}`).then((data) => {
+      const mostConsuming = data.value
+        .sort((a, b) => b.consumption - a.consumption)
+        .slice(0, 3)
+        .map(({ appliance_id, consumption }) => {
+          const appliance = appliances.find(
+            (appliance) => appliance.id === appliance_id,
+          );
+          return { appliance: appliance, consumption: consumption };
+        });
 
-    apiFetch(`/consumption/${timeNow}`)
-      .then((response) => response.json())
-      .then((data) => {
-        const mostConsuming = data.value
-          .sort((a, b) => b.consumption - a.consumption)
-          .slice(0, 3)
-          .map(({ appliance_id, consumption }) => {
-            const appliance = appliances.find(
-              (appliance) => appliance.id === appliance_id,
-            );
-            return { appliance: appliance, consumption: consumption };
-          });
-
-        setMostConsumingAppliances(mostConsuming);
-      });
+      setMostConsumingAppliances(mostConsuming);
+    });
   }, [appliances]);
 
   useEffect(() => {
@@ -131,23 +116,15 @@ const App = () => {
     <Flowbite theme={{ theme: customTheme }}>
       <div className="flex flex-col justify-between gap-8">
         <ErrorBanner visible={showErrorBanner} />
-        <Title />
-        <div className="flex flex-col justify-between gap-8 lg:flex-row">
-          <div className="flex flex-col justify-between gap-8 md:flex-row lg:flex-col">
-            <ConsumptionNow
-              consumption={consumptionNow}
-              className="h-full w-full"
-            />
-            <MostConsumingAppliances
-              appliancesConsumption={mostConsumingAppliances}
-              className="h-full w-full"
-            />
-          </div>
-          <DayConsumptionChart data={consumptionsPerHour} className="w-full" />
-        </div>
+        <TitleBar />
+        <StatsSection
+          consumptionNow={consumptionNow}
+          mostConsumingAppliances={mostConsumingAppliances}
+          consumptionsPerHour={consumptionsPerHour}
+        />
         <SimulateSection />
-        <AppliancesList appliances={appliances} />
-        <RoutinesList routines={routines} />
+        <AppliancesSection appliances={appliances} />
+        <RoutinesSection routines={routines} />
       </div>
     </Flowbite>
   );

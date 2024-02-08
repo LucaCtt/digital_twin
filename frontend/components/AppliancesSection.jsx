@@ -36,7 +36,7 @@ const getIcon = (device) => {
   }
 };
 
-const AppliancesList = ({ appliances }) => {
+const AppliancesSection = ({ appliances }) => {
   return (
     <div className="flex flex-col justify-start rounded-lg bg-gray-100 p-8 dark:bg-gray-800">
       <h2>Appliances</h2>
@@ -75,4 +75,4 @@ const AppliancesList = ({ appliances }) => {
   );
 };
 
-export default AppliancesList;
+export default AppliancesSection;

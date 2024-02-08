@@ -1,8 +1,6 @@
-"use client";
-
 import { List, Table } from "flowbite-react";
 
-const RoutinesList = ({ routines }) => {
+const RoutinesSection = ({ routines }) => {
   return (
     <div className="flex flex-col justify-start rounded-lg bg-gray-100 p-8 dark:bg-gray-800">
       <h2>Routines</h2>
@@ -57,4 +55,4 @@ const RoutinesList = ({ routines }) => {
   );
 };
 
-export default RoutinesList;
+export default RoutinesSection;
