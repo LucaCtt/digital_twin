@@ -1,4 +1,5 @@
 import { Table } from "flowbite-react";
+import { useContext } from "react";
 import {
   MdKitchen,
   MdLocalFireDepartment,
@@ -11,6 +12,7 @@ import {
   MdLocalLaundryService,
   MdWaterDrop,
 } from "react-icons/md";
+import { DigitalTwinContext } from "./DigitalTwinContextProvider";
 
 const iconMap = {
   fridge: MdKitchen,
@@ -36,7 +38,9 @@ const getIcon = (device) => {
   }
 };
 
-const AppliancesSection = ({ appliances }) => {
+const AppliancesSection = () => {
+  const { appliances } = useContext(DigitalTwinContext);
+
   return (
     <div className="flex flex-col justify-start rounded-lg bg-gray-100 p-8 dark:bg-gray-800">
       <h2>Appliances</h2>

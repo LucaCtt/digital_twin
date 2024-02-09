@@ -1,6 +1,10 @@
+import { useContext } from "react";
 import { List, Table } from "flowbite-react";
+import { DigitalTwinContext } from "./DigitalTwinContextProvider";
 
-const RoutinesSection = ({ routines }) => {
+const RoutinesSection = () => {
+  const { routines } = useContext(DigitalTwinContext);
+
   return (
     <div className="flex flex-col justify-start rounded-lg bg-gray-100 p-8 dark:bg-gray-800">
       <h2>Routines</h2>

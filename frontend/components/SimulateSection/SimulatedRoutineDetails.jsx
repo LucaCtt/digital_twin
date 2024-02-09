@@ -1,9 +1,15 @@
 import { Table, List } from "flowbite-react";
 
 const SimulatedRoutineDetails = ({ routine }) => {
+  const when = new Date();
+  when.setHours(...routine.when[1].split(":"));
+
   const details = {
     "Routine name:": routine.name,
-    "Activates at:": routine.when[1],
+    "Activates at:": when.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
     "Actions:": (
       <List className="list-outside dark:text-white">
         {routine.actions.map((action) => (

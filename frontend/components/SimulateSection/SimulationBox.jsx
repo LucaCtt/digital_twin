@@ -2,7 +2,13 @@ import { Button } from "flowbite-react";
 import SimulatedRoutineDetails from "./SimulatedRoutineDetails";
 import SimulationResult from "./SimulationResult";
 
-const SimulationBox = ({ routine, onSimulate, isSimulating, result }) => {
+const SimulationBox = ({
+  routine,
+  onSimulate,
+  isSimulating,
+  errors,
+  recommendations,
+}) => {
   return (
     <div className="flex flex-col gap-8 pt-4 lg:flex-row">
       <div className="flex w-full flex-col justify-between gap-8">
@@ -16,7 +22,11 @@ const SimulationBox = ({ routine, onSimulate, isSimulating, result }) => {
           Simulate routine addition
         </Button>
       </div>
-      <SimulationResult recommendations={result.recommendations} errors={result.errors} className="w-full" />
+      <SimulationResult
+        recommendations={recommendations}
+        errors={errors}
+        className="w-full"
+      />
     </div>
   );
 };

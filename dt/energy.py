@@ -302,13 +302,14 @@ class RoutineOptimizer:
         return BetterStartTimeRecommendation(best_time)
 
     def __routine_cost(self, routine: Routine, when: datetime) -> float:
-        return sum(self.__action_cost(action, when) for action in routine.actions)
+        return sum(self.__action_cost(action, when) for action in routine.actions if action.duration is not None)
 
     def __action_cost(self, action: RoutineAction, when: datetime) -> float:
+        assert action.duration is not None
+
         cost = 0
 
-        duration = action.duration if action.duration else const.MINUTES_IN_DAY - when.minute
-        for time in (when + timedelta(n) for n in range(0, duration)):
+        for time in (when + timedelta(n) for n in range(0, action.duration)):
             cost += self.costs_matrix.get_cost(time)
 
         return cost
