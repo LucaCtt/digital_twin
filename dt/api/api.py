@@ -75,7 +75,7 @@ def create_api(repository: DataRepository, config: EnergyConfig, title="Digital 
 
     api.add_middleware(
         CORSMiddleware,
-        allow_origins=[os.environ["FRONTEND_URL"]],
+        allow_origins=[os.environ["DT_FRONTEND_URL"]],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

@@ -20,7 +20,7 @@ export const DigitalTwinContext = createContext({
 });
 
 const apiFetch = async (path, method = "GET", body = null) => {
-  const response = await fetch(`${process.env.BACKEND_URL}${path}`, {
+  const response = await fetch(`${import.meta.env.DT_BACKEND_URL}${path}`, {
     method,
     headers: {
       "Content-Type": "application/json",
@@ -141,7 +141,7 @@ const DigitalTwinContextProvider = ({ children }) => {
       routine,
     );
 
-    setSimulationResult({ isSimulating: false, errors, recommendations });
+    setSimulationStatus({ isSimulating: false, errors, recommendations });
   };
 
   useEffect(() => {

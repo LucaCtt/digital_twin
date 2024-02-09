@@ -111,7 +111,7 @@ def plot_simulated_matrix(repository: DataRepository, config: EnergyConfig):
 
 
 if __name__ == "__main__":
-    config = Config.from_toml(os.environ["CONFIG_FILE"])
+    config = Config.from_toml(os.environ["DT_CONFIG_FILE"])
     repository = RepositoryFactory.create(config.database_config)
 
     plot_simulated_matrix(repository, config.energy_config)
