@@ -1,8 +1,5 @@
 import { Button, Tooltip, useThemeMode } from "flowbite-react";
-import {
-  MdDarkMode,
-  MdLightMode,
-} from "react-icons/md";
+import { MdDarkMode, MdLightMode } from "react-icons/md";
 
 const ThemeButton = () => {
   const { mode, setMode } = useThemeMode();

@@ -39,7 +39,7 @@ const DayConsumptionChart = ({ data, className }) => {
     },
     yaxis: {
       title: {
-        text: "Total Energy Consumption (Watts)",
+        text: "Total Energy Consumption (KW)",
         style: {
           cssClass: "font-normal text-md fill-gray-600 dark:fill-gray-400",
         },
@@ -49,14 +49,18 @@ const DayConsumptionChart = ({ data, className }) => {
           cssClass: "font-normal fill-gray-600 dark:fill-gray-400",
         },
       },
+      min: 0,
+      max: 3,
+      decimalsInFloat: 1,
+      stepSize: 0.5,
     },
     colors: ["#0E9F6E"],
   };
 
   const series = [
     {
-      name: "Total consumption (W)",
-      data,
+      name: "Total consumption (kW)",
+      data: data.map((c) => c / 1000),
     },
   ];
 

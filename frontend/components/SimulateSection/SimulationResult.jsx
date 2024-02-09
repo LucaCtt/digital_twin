@@ -38,7 +38,9 @@ const SimulationResult = ({ errors, recommendations, className }) => {
       {hasResults ? (
         <div className="flex flex-col gap-8">
           {hasErrors && <ErrorsList errors={errors} />}
-          {hasRecommendations && <RecommendationsList recommendations={recommendations} />}
+          {hasRecommendations && (
+            <RecommendationsList recommendations={recommendations} />
+          )}
         </div>
       ) : (
         <p>Simulation results will be shown here</p>

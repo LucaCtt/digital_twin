@@ -2,7 +2,8 @@ import { Table, List } from "flowbite-react";
 
 const SimulatedRoutineDetails = ({ routine }) => {
   const when = new Date();
-  when.setHours(...routine.when[1].split(":"));
+  const hours = routine.when[1].split(":");
+  when.setHours(hours[0], hours[1], 0, 0);
 
   const details = {
     "Routine name:": routine.name,

@@ -283,7 +283,13 @@ class RoutineOptimizer:
         best_time = routine.when
         best_cost = self.costs_matrix.get_cost(routine.when)
 
-        for minute in range(0, const.MINUTES_IN_DAY):
+        end_time = const.MINUTES_IN_DAY
+
+        for action in routine.actions:
+            if action.duration is not None and const.MINUTES_IN_DAY - action.duration < end_time:
+                end_time = const.MINUTES_IN_DAY - action.duration
+
+        for minute in range(0, end_time):
             when = datetime.today().replace(
                 hour=minute//60, minute=minute % 60)
             if self.__routine_cost(routine, when) <= best_cost:
@@ -307,9 +313,4 @@ class RoutineOptimizer:
     def __action_cost(self, action: RoutineAction, when: datetime) -> float:
         assert action.duration is not None
 
-        cost = 0
-
-        for time in (when + timedelta(n) for n in range(0, action.duration)):
-            cost += self.costs_matrix.get_cost(time)
-
-        return cost
+        return sum(self.costs_matrix.get_cost(when + timedelta(minutes=n)) for n in range(action.duration))
