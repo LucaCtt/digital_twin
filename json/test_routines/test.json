@@ -1,10 +1,7 @@
 {
     "id": 0,
     "name": "Test 1",
-    "when": [
-        "Today",
-        "8:30"
-    ],
+    "when": "8:30",
     "enabled": true,
     "actions": [
         {

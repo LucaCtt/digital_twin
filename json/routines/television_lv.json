@@ -1,10 +1,7 @@
 {
     "id": 4,
     "name": "Afternoon television",
-    "when": [
-        "Today",
-        "14:30"
-    ],
+    "when": "14:30",
     "enabled": true,
     "actions": [
         {

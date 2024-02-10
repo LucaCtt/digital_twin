@@ -1,10 +1,7 @@
 {
     "id": 3,
     "name": "Microwave lunch",
-    "when": [
-        "Today",
-        "12:30"
-    ],
+    "when": "12:30",
     "enabled": true,
     "actions": [
         {

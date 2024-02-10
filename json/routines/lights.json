@@ -1,10 +1,7 @@
 {
     "id": 2,
     "name": "Switch on lights in the evening",
-    "when": [
-        "Today",
-        "16:00"
-    ],
+    "when": "16:00",
     "enabled": true,
     "actions": [
         {

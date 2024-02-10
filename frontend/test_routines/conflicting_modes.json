@@ -1,10 +1,7 @@
 {
-  "id": 30,
-  "name": "No Conflict",
-  "when": [
-    "Today",
-    "16:30"
-  ],
+  "id": 32,
+  "name": "Conflicting Operation Modes",
+  "when": "16:30",
   "enabled": true,
   "actions": [
     {

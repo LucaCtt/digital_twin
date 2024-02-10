@@ -1,10 +1,7 @@
 {
     "id": 1,
     "name": "Run fridge all day",
-    "when": [
-        "Today",
-        "00:00"
-    ],
+    "when": "00:00",
     "enabled": true,
     "actions": [
         {

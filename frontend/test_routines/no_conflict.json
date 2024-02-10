@@ -1,0 +1,14 @@
+{
+  "id": 30,
+  "name": "No Conflict",
+  "when": "16:30",
+  "enabled": true,
+  "actions": [
+    {
+      "id": 0,
+      "appliance_id": 0,
+      "mode_id": 2,
+      "duration": 18000
+    }
+  ]
+}
