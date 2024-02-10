@@ -2,12 +2,10 @@ from datetime import datetime
 from enum import Enum
 from fastapi import APIRouter, Query
 
-from api import schemas
-from dt.api.schemas import RoutineIn
+from dt.api import schemas
+from dt.data import DataRepository, Routine, RoutineAction
+from dt.energy import ConsumptionsMatrix, CostsMatrix, RoutineOptimizer
 from .. import errors
-from data import DataRepository, Routine, RoutineAction
-from energy import ConsumptionsMatrix, CostsMatrix, RoutineOptimizer
-
 
 def get_simulate_router(repository: DataRepository, matrix: ConsumptionsMatrix, costs: CostsMatrix, tags: list[str | Enum]) -> APIRouter:
     router = APIRouter(tags=tags, prefix="/simulate")
@@ -28,7 +26,7 @@ def get_simulate_router(repository: DataRepository, matrix: ConsumptionsMatrix, 
         return schemas.BaseResponse(recommendations=[schemas.RecommendationOut.model_validate(recommendation)])
 
     @router.post("/consumption/{when}")
-    async def post_consumptions(routine_in: RoutineIn, when: datetime) -> schemas.ListResponse[schemas.ApplianceConsumption]:
+    async def post_consumptions(routine_in: schemas.RoutineIn, when: datetime) -> schemas.ListResponse[schemas.ApplianceConsumption]:
         """Get the per-appliance consumption at a given date and time.
         """
 
@@ -48,7 +46,7 @@ def get_simulate_router(repository: DataRepository, matrix: ConsumptionsMatrix, 
         return schemas.ValueResponse(value=simulated.total_consumption(when))
 
     @router.post("/consumption/total/")
-    async def post_consumption_total_list(routine_in: RoutineIn, when: list[datetime] = Query()) -> schemas.ListResponse[float]:
+    async def post_consumption_total_list(routine_in: schemas.RoutineIn, when: list[datetime] = Query()) -> schemas.ListResponse[float]:
         """Get the total consumption for the given dates and times.
         """
 

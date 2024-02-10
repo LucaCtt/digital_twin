@@ -2,10 +2,10 @@ from datetime import datetime
 from enum import Enum
 from fastapi import APIRouter, Query
 
-from api import schemas
+from dt.api import schemas
+from dt.data import DataRepository
+from dt.energy import ConsumptionsMatrix
 from .. import errors
-from data import DataRepository
-from energy import ConsumptionsMatrix
 
 
 def get_consumption_router(repository: DataRepository, matrix: ConsumptionsMatrix, tags: list[str | Enum]) -> APIRouter:

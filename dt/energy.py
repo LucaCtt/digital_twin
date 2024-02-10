@@ -4,9 +4,9 @@ from datetime import datetime, timedelta
 from typing import Any
 import numpy as np
 
-from config import EnergyConfig
-from data import Appliance, Routine, RoutineAction
-import const
+from dt.config import EnergyConfig
+from dt.data import Appliance, Routine, RoutineAction
+from dt import const
 
 
 class Recommendation(ABC):
@@ -187,14 +187,14 @@ class ConsumptionsMatrix():
         minute_of_day = when.hour * 60 + when.minute
         modes_ids = self.matrix[minute_of_day]
 
-        dict = {}
+        consumptions_dict = {}
         for appliance_id, mode_id in enumerate(modes_ids):
             appliance = next(
                 a for a in self.appliances if a.id == appliance_id)
             mode = next(m for m in appliance.modes if m.id == mode_id)
-            dict[appliance] = mode.power_consumption
+            consumptions_dict[appliance] = mode.power_consumption
 
-        return dict
+        return consumptions_dict
 
     def appliance_consumption(self, appliance: Appliance, when: datetime) -> float:
         """Calculate the consumption of a specific appliance at a given time.
@@ -310,7 +310,7 @@ class RoutineOptimizer:
         min_values = routine_costs_per_minute[min_indices]
 
         # Iterate the ordered indices of the routine costs
-        for i in range(len(min_indices)):
+        for _, i in enumerate(min_indices):
             # If the cost of the routine at the current iteration is greater than the original cost, return
             if min_values[i] >= original_routine_cost:
                 return
@@ -325,7 +325,7 @@ class RoutineOptimizer:
                 routine.when = new_when
                 self.consumptions_matrix.add_routine(routine)
                 return ChangeStartTimeRecommendation(new_when, original_routine_cost - min_values[i])
-            except:
+            except ConflictError:
                 routine.when = old_when
                 continue
 

@@ -10,7 +10,7 @@ from datetime import datetime
 import json
 import os
 
-from config import DatabaseConfig
+from dt.config import DatabaseConfig
 from .models import Appliance, OperationMode, Routine, RoutineAction
 
 
@@ -38,7 +38,6 @@ class DataRepository(ABC):
         Returns:
             list[Appliance]: The list of appliances.
         """
-        pass
 
     def get_routine(self, routine_id: int) -> Routine | None:
         """Get a routine by its ID.
@@ -58,7 +57,6 @@ class DataRepository(ABC):
         Returns:
             list[Routine]: The list of routines.
         """
-        pass
 
     @abstractmethod
     def get_test_routines(self) -> list[Routine]:
@@ -67,7 +65,6 @@ class DataRepository(ABC):
         Returns:
             list[Routine]: The list of test routines.
         """
-        pass
 
 
 class JSONRepository(DataRepository):
@@ -125,10 +122,10 @@ def read_appliance_json(filepath: str) -> Appliance:
     Returns:
         Appliance: The appliance.
     """
-    with open(filepath) as file:
+    with open(filepath, encoding="utf-8") as file:
         data = json.load(file)
 
-        id = data["id"]
+        appliance_id = data["id"]
         device = data["device"]
         manufacturer = data["manufacturer"]
         model = data["model"]
@@ -145,7 +142,7 @@ def read_appliance_json(filepath: str) -> Appliance:
                 mode_id, mode_name, power_consumption, default_duration)
             modes.append(mode)
 
-        return Appliance(id, device, manufacturer, model, location, modes)
+        return Appliance(appliance_id, device, manufacturer, model, location, modes)
 
 
 def read_appliances_json(dir_path: str) -> list[Appliance]:
@@ -179,10 +176,10 @@ def read_routine_json(filepath: str, appliances: list[Appliance]) -> Routine:
         Routine: The routine.
     """
 
-    with open(filepath) as file:
+    with open(filepath, encoding="utf-8") as file:
         data = json.load(file)
 
-        id = data["id"]
+        routine_id = data["id"]
         name = data["name"]
         enabled = data["enabled"]
         when = data["when"][1]
@@ -204,7 +201,7 @@ def read_routine_json(filepath: str, appliances: list[Appliance]) -> Routine:
             action = RoutineAction(action_id, appliance, mode, duration)
             actions.append(action)
 
-        routine = Routine(id, name, when, actions, enabled)
+        routine = Routine(routine_id, name, when, actions, enabled)
 
         return routine
 
@@ -244,7 +241,7 @@ class RepositoryFactory:
         Returns:
             DataRepository: The data repository.
         """
-        if config.type != "json":
+        if config.database_type != "json":
             raise ValueError("Database type not supported")
 
         return JSONRepository(

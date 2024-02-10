@@ -1,9 +1,9 @@
 from enum import Enum
 from fastapi import APIRouter
 
-from api import schemas
+from dt.api import schemas
+from dt.data import DataRepository
 from .. import errors
-from data import DataRepository
 
 
 def get_appliance_router(repository: DataRepository, tags: list[str | Enum]) -> APIRouter:

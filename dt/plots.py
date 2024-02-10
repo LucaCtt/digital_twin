@@ -12,11 +12,10 @@ from matplotlib import cm
 from matplotlib import patheffects
 import numpy as np
 
-from config import Config, EnergyConfig
-from dt.data.data_repository import RepositoryFactory
-from energy import ConsumptionsMatrix
-from data import Appliance, Routine, DataRepository
-from const import MINUTES_IN_DAY
+from dt.config import Config, EnergyConfig
+from dt.data import RepositoryFactory, Appliance, Routine, DataRepository
+from dt.energy import ConsumptionsMatrix
+from dt.const import MINUTES_IN_DAY
 
 matplotlib.use("GTK4Agg")
 

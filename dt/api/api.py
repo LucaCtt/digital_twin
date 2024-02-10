@@ -9,12 +9,12 @@ import fastapi
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from starlette.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.exceptions import HTTPException
 
-from data import DataRepository
-from config import EnergyConfig
-from energy import ConflictError, ConsumptionsMatrix, CostsMatrix
+from dt.data import DataRepository
+from dt.config import EnergyConfig
+from dt.energy import ConflictError, ConsumptionsMatrix, CostsMatrix
 from . import routes
 from . import schemas
 
