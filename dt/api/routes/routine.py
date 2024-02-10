@@ -21,7 +21,7 @@ def get_routine_router(repository: DataRepository, tags: list[str | Enum]) -> AP
 
         return schemas.ValueResponse(value=schemas.RoutineOut.model_validate(routine))
 
-    @router.get("/")
+    @router.get("")
     async def get_routines() -> schemas.ListResponse[schemas.RoutineOut]:
         """Get all routines.
         """

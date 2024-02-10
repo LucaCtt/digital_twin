@@ -182,7 +182,7 @@ def read_routine_json(filepath: str, appliances: list[Appliance]) -> Routine:
         routine_id = data["id"]
         name = data["name"]
         enabled = data["enabled"]
-        when = data["when"][1]
+        when = data["when"]
         when = datetime.strptime(when, "%H:%M")
 
         actions = []

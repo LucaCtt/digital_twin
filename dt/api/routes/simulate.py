@@ -3,14 +3,16 @@ from enum import Enum
 from fastapi import APIRouter, Query
 
 from dt.api import schemas
+from dt.api.routes import routine
 from dt.data import DataRepository, Routine, RoutineAction
 from dt.energy import ConsumptionsMatrix, CostsMatrix, RoutineOptimizer
 from .. import errors
 
+
 def get_simulate_router(repository: DataRepository, matrix: ConsumptionsMatrix, costs: CostsMatrix, tags: list[str | Enum]) -> APIRouter:
     router = APIRouter(tags=tags, prefix="/simulate")
 
-    @router.post("/")
+    @router.post("")
     async def post_simulate(routine_in: schemas.RoutineIn) -> schemas.BaseResponse:
         """Simulates the addition of a routine.
         """
@@ -23,7 +25,7 @@ def get_simulate_router(repository: DataRepository, matrix: ConsumptionsMatrix, 
         optimizer = RoutineOptimizer(matrix, costs)
         recommendation = optimizer.find_best_start_time(routine_model)
 
-        return schemas.BaseResponse(recommendations=[schemas.RecommendationOut.model_validate(recommendation)])
+        return schemas.BaseResponse(recommendations=[schemas.RecommendationOut.model_validate(recommendation)] if recommendation else [])
 
     @router.post("/consumption/{when}")
     async def post_consumptions(routine_in: schemas.RoutineIn, when: datetime) -> schemas.ListResponse[schemas.ApplianceConsumption]:
@@ -105,5 +107,6 @@ def __routine_schema_to_model(routine_in: schemas.RoutineIn, repository: DataRep
         actions.append(RoutineAction(**action_dict))
 
     routine_dict = vars(routine_in)
+    routine_dict["when"] = datetime.strptime(routine_dict["when"], "%H:%M")
     routine_dict["actions"] = actions
     return Routine(**routine_dict)

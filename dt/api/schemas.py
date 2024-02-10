@@ -88,7 +88,7 @@ class RoutineIn(BaseModel):
 
     id: int
     name: str
-    when: datetime
+    when: str
     actions: list[RoutineActionIn]
     enabled: bool = True
 

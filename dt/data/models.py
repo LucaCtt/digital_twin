@@ -23,8 +23,8 @@ class OperationMode:
         If None, the duration is unlimited by default.
     """
 
-    def __init__(self, mode_id: int, name: str, power_consumption: float, default_duration: int | None = None):
-        self.id = mode_id
+    def __init__(self, id: int, name: str, power_consumption: float, default_duration: int | None = None):
+        self.id = id
         self.name = name
         self.power_consumption = power_consumption
         self.default_duration = default_duration
@@ -43,8 +43,8 @@ class Appliance:
         An "off" mode is required, and it's a good practice to have it as the first one in the list.
     """
 
-    def __init__(self, appliance_id: int, device: str, manufacturer: str, model: str, location: str, modes: list[OperationMode]):
-        self.id = appliance_id
+    def __init__(self, id: int, device: str, manufacturer: str, model: str, location: str, modes: list[OperationMode]):
+        self.id = id
         self.device = device
         self.manufacturer = manufacturer
         self.model = model
@@ -76,8 +76,8 @@ class RoutineAction:
         and an explicit action to change the mode of the appliance is required.
     """
 
-    def __init__(self, action_id: int, appliance: Appliance, mode: OperationMode, duration: int | None = None):
-        self.id = action_id
+    def __init__(self, id: int, appliance: Appliance, mode: OperationMode, duration: int | None = None):
+        self.id = id
         self.appliance = appliance
         self.mode = mode
         self.duration = duration
@@ -105,8 +105,8 @@ class Routine:
         enabled (bool): Whether the routine is enabled. If False, the routine is not executed.
     """
 
-    def __init__(self, routine_id: int, name: str, when: datetime, actions: list[RoutineAction], enabled: bool = True):
-        self.id = routine_id
+    def __init__(self, id: int, name: str, when: datetime, actions: list[RoutineAction], enabled: bool = True):
+        self.id = id
         self.name = name
         self.enabled = enabled
         self.when = when

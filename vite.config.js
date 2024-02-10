@@ -10,6 +10,9 @@ export default defineConfig(({mode}) => {
     server: {
       port: Number(port),
     },
+    preview: {
+      port: Number(port),
+    },
     envDir: "../",
     envPrefix: "DT_",
     root: "frontend",

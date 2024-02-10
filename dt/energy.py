@@ -29,7 +29,7 @@ class DisableRoutineRecommendation(Recommendation):
 
 class ChangeStartTimeRecommendation(Recommendation):
     def __init__(self, new_time: datetime, energy_savings: float) -> None:
-        super().__init__(f"Start the routine at {new_time} can save ${energy_savings}W.",
+        super().__init__(f"Starting the routine at {new_time} can save {energy_savings}W.",
                          {"new_time": new_time, "energy_savings": energy_savings})
 
 
@@ -231,7 +231,7 @@ class CostsMatrix:
     def __init__(self, config: EnergyConfig) -> None:
         self.config = config
         self.matrix = np.zeros(
-            (const.DAYS_IN_WEEK, const.HOURS_IN_DAY), dtype=np.int8)
+            (const.DAYS_IN_WEEK, const.HOURS_IN_DAY), dtype=float)
 
         for day_of_week in list(range(const.DAYS_IN_WEEK)):
             if config.energy_rates_number == 1:
@@ -245,7 +245,7 @@ class CostsMatrix:
                 # Set monday to friday from 8:00 to 18:00 to F1
                 if const.DAY_OF_WEEK_MONDAY <= day_of_week <= const.DAY_OF_WEEK_FRIDAY:
                     self.matrix[day_of_week,
-                                8:18] = config.energy_rates_prices[0]
+                                8:18+1] = config.energy_rates_prices[0]
 
             elif config.energy_rates_number == 3:
                 # Set everything to F3
@@ -255,11 +255,11 @@ class CostsMatrix:
                     if day_of_week <= const.DAY_OF_WEEK_FRIDAY:
                         # Set monday to saturday from 7:00 to 22:00 to F2
                         self.matrix[day_of_week,
-                                    8:18] = config.energy_rates_prices[0]
+                                    8:18+1] = config.energy_rates_prices[0]
                     else:
                         # Set monday to friday from 8:00 to 18:00 to F1
                         self.matrix[day_of_week,
-                                    7:22] = config.energy_rates_prices[1]
+                                    7:22+1] = config.energy_rates_prices[1]
 
     def get_cost(self, when: datetime) -> float:
         """Calculate the eletricity cost at a given time.
@@ -283,7 +283,8 @@ class CostsMatrix:
         Returns:
             float: The cost of the electricity for the sequence.
         """
-        return self.matrix[when.weekday(), when.hour:(when + duration).hour].sum()
+        test = self.matrix[when.weekday(), when.hour:(when + duration).hour + 1].sum()
+        return test
 
 
 class RoutineOptimizer:

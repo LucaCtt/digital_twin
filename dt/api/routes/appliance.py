@@ -21,7 +21,7 @@ def get_appliance_router(repository: DataRepository, tags: list[str | Enum]) -> 
 
         return schemas.ValueResponse(value=schemas.ApplianceOut.model_validate(appliance))
 
-    @router.get("/")
+    @router.get("")
     async def get_appliances() -> schemas.ListResponse[schemas.ApplianceOut]:
         """Get all appliances.
         """
