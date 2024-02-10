@@ -27,10 +27,10 @@ class DisableRoutineRecommendation(Recommendation):
             f"Disable routine {routine.name}.", {"routine": routine})
 
 
-class BetterStartTimeRecommendation(Recommendation):
-    def __init__(self, new_time: datetime) -> None:
-        super().__init__(
-            f"The start time of the routine should be changed to {new_time}.", {"new_time": new_time})
+class ChangeStartTimeRecommendation(Recommendation):
+    def __init__(self, new_time: datetime, energy_savings: float) -> None:
+        super().__init__(f"Start the routine at {new_time} can save ${energy_savings}W.",
+                         {"new_time": new_time, "energy_savings": energy_savings})
 
 
 class ConflictError(Exception):
@@ -231,47 +231,59 @@ class CostsMatrix:
     def __init__(self, config: EnergyConfig) -> None:
         self.config = config
         self.matrix = np.zeros(
-            (const.DAYS_IN_WEEK, const.MINUTES_IN_DAY), dtype=np.int8)
+            (const.DAYS_IN_WEEK, const.HOURS_IN_DAY), dtype=np.int8)
 
         for day_of_week in list(range(const.DAYS_IN_WEEK)):
             if config.energy_rates_number == 1:
                 # Set everything to F1
                 self.matrix[day_of_week, :] = config.energy_rates_prices[0]
+
             elif config.energy_rates_number == 2:
                 # Set everything to F23
                 self.matrix[day_of_week, :] = config.energy_rates_prices[1]
 
                 # Set monday to friday from 8:00 to 18:00 to F1
-                if day_of_week >= 0 and day_of_week <= 4:
-                    self.matrix[day_of_week, 8*60:18 *
-                                60] = config.energy_rates_prices[0]
+                if day_of_week >= const.DAY_OF_WEEK_MONDAY and day_of_week <= const.DAY_OF_WEEK_FRIDAY:
+                    self.matrix[day_of_week,
+                                8:18] = config.energy_rates_prices[0]
+
             elif config.energy_rates_number == 3:
                 # Set everything to F3
                 self.matrix[day_of_week, :] = config.energy_rates_prices[2]
 
-                if day_of_week >= 0 and day_of_week <= 5:
-                    if day_of_week >= 0 and day_of_week <= 4:
+                if day_of_week >= const.DAY_OF_WEEK_MONDAY and day_of_week <= const.DAY_OF_WEEK_SATURDAY:
+                    if day_of_week <= const.DAY_OF_WEEK_FRIDAY:
                         # Set monday to saturday from 7:00 to 22:00 to F2
-                        self.matrix[day_of_week, 8*60:18 *
-                                    60] = config.energy_rates_prices[0]
+                        self.matrix[day_of_week,
+                                    8:18] = config.energy_rates_prices[0]
                     else:
                         # Set monday to friday from 8:00 to 18:00 to F1
-                        self.matrix[day_of_week, 7*60:22 *
-                                    60] = config.energy_rates_prices[1]
+                        self.matrix[day_of_week,
+                                    7:22] = config.energy_rates_prices[1]
 
     def get_cost(self, when: datetime) -> float:
-        """Calculate the eletrcity cost at a given time.
+        """Calculate the eletricity cost at a given time.
 
         Args:
             when (datetime): The time to calculate the cost.
 
         Returns:
-            float: The cost of the house at the given time.
+            float: The cost of the electricity at the given time.
         """
-        minute_of_day = when.hour * 60 + when.minute
-        day_of_week = when.weekday()
+        return self.matrix[when.weekday(), when.hour]
 
-        return self.matrix[day_of_week, minute_of_day]
+    def get_duration_cost(self, when: datetime, duration: timedelta) -> float:
+        """Calculate the eletricity cost of a sequence of time,
+        starting from a given time and lasting for a given duration.
+
+        Args:
+            when (datetime): The start time of the sequence.
+            duration (timedelta): The duration of the sequence.
+
+        Returns:
+            float: The cost of the electricity for the sequence.
+        """
+        return self.matrix[when.weekday(), when.hour:(when + duration).hour].sum()
 
 
 class RoutineOptimizer:
@@ -279,38 +291,45 @@ class RoutineOptimizer:
         self.consumptions_matrix = consumptions_matrix
         self.costs_matrix = costs_matrix
 
-    def find_best_start_time(self, routine: Routine) -> BetterStartTimeRecommendation | None:
-        best_time = routine.when
-        best_cost = self.costs_matrix.get_cost(routine.when)
+    def find_best_start_time(self, routine: Routine) -> ChangeStartTimeRecommendation | None:
+        # Calculate the latest end time of the routine so that
+        # the longest running action is completed before the end of the day.
+        latest_end_time = min(
+            const.MINUTES_IN_DAY - action.duration for action in routine.actions if action.duration is not None)
 
-        end_time = const.MINUTES_IN_DAY
+        # Calculate the cost of starting the routine at each minute of the day
+        routine_costs_per_minute = np.array([self.__routine_cost(routine, routine.when.replace(
+            hour=minute//60, minute=minute % 60)) for minute in range(0, latest_end_time)])
 
-        for action in routine.actions:
-            if action.duration is not None and const.MINUTES_IN_DAY - action.duration < end_time:
-                end_time = const.MINUTES_IN_DAY - action.duration
+        # Calculate the cost of the original routine
+        original_routine_cost = routine_costs_per_minute[routine.when.hour *
+                                                         60 + routine.when.minute]
 
-        for minute in range(0, end_time):
-            when = datetime.today().replace(
-                hour=minute//60, minute=minute % 60)
-            if self.__routine_cost(routine, when) <= best_cost:
+        # Get the list of indices of the routine costs ordered by cost
+        min_indices = np.argsort(routine_costs_per_minute)
+        min_values = routine_costs_per_minute[min_indices]
 
-                # Try to add the routine to the matrix to see if any conflicts are thrown
-                try:
-                    self.consumptions_matrix.add_routine(routine)
-                    best_time = when
-                    best_cost = self.costs_matrix.get_cost(when)
-                except:
-                    continue
+        # Iterate the ordered indices of the routine costs
+        for i in range(len(min_indices)):
+            # If the cost of the routine at the current iteration is greater than the original cost, return
+            if min_values[i] >= original_routine_cost:
+                return
 
-        if best_time == routine.when:
-            return None
+            old_when = routine.when
+            new_when = routine.when.replace(
+                hour=min_indices[i]//60, minute=min_indices[i] % 60)
 
-        return BetterStartTimeRecommendation(best_time)
+            # Try to add the routine to the matrix at the new time.
+            # If it fails, continue to the next iteration.
+            try:
+                routine.when = new_when
+                self.consumptions_matrix.add_routine(routine)
+                return ChangeStartTimeRecommendation(new_when, original_routine_cost - min_values[i])
+            except:
+                routine.when = old_when
+                continue
 
     def __routine_cost(self, routine: Routine, when: datetime) -> float:
-        return sum(self.__action_cost(action, when) for action in routine.actions if action.duration is not None)
-
-    def __action_cost(self, action: RoutineAction, when: datetime) -> float:
-        assert action.duration is not None
-
-        return sum(self.costs_matrix.get_cost(when + timedelta(minutes=n)) for n in range(action.duration))
+        actions_durations = [
+            action.duration for action in routine.actions if action.duration is not None]
+        return np.sum([self.costs_matrix.get_duration_cost(when, timedelta(minutes=duration)) for duration in actions_durations])
