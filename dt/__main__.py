@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-from fastapi import FastAPI
 import uvicorn
 
 from api import create_api
