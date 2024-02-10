@@ -1,12 +1,14 @@
+import {lazy } from "react";
 import { Flowbite } from "flowbite-react";
 
 import DigitalTwinContextProvider from "./DigitalTwinContextProvider";
 import ErrorBanner from "./ErrorBanner";
 import TitleBar from "./TitleBar";
-import AppliancesSection from "./AppliancesSection";
-import RoutinesSection from "./RoutinesSection";
-import SimulateSection from "./SimulateSection";
-import StatsSection from "./StatsSection";
+
+const StatsSection = lazy(() => import("./StatsSection"));
+const SimulateSection = lazy(() => import("./SimulateSection"));
+const AppliancesSection = lazy(() => import("./AppliancesSection"));
+const RoutinesSection = lazy(() => import("./RoutinesSection"));
 
 const flowbiteTheme = {
   button: {
