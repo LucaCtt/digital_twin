@@ -435,7 +435,8 @@ disable=raw-checker-failed,
         line-too-long,
         too-few-public-methods,
         cell-var-from-loop,
-        too-many-arguments
+        too-many-arguments,
+        too-many-locals,
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

@@ -167,10 +167,10 @@ class ConsumptionsMatrix():
         for i, mode_id in enumerate(row_now):
             if mode_id == 0:
                 continue
-            else:
-                appliance = next(a for a in self.appliances if a.id == i)
-                mode = next(m for m in appliance.modes if m.id == mode_id)
-                total_consumption += mode.power_consumption
+
+            appliance = next(a for a in self.appliances if a.id == i)
+            mode = next(m for m in appliance.modes if m.id == mode_id)
+            total_consumption += mode.power_consumption
 
         return total_consumption
 
@@ -243,7 +243,7 @@ class CostsMatrix:
                 self.matrix[day_of_week, :] = config.energy_rates_prices[1]
 
                 # Set monday to friday from 8:00 to 18:00 to F1
-                if day_of_week >= const.DAY_OF_WEEK_MONDAY and day_of_week <= const.DAY_OF_WEEK_FRIDAY:
+                if const.DAY_OF_WEEK_MONDAY <= day_of_week <= const.DAY_OF_WEEK_FRIDAY:
                     self.matrix[day_of_week,
                                 8:18] = config.energy_rates_prices[0]
 
@@ -251,7 +251,7 @@ class CostsMatrix:
                 # Set everything to F3
                 self.matrix[day_of_week, :] = config.energy_rates_prices[2]
 
-                if day_of_week >= const.DAY_OF_WEEK_MONDAY and day_of_week <= const.DAY_OF_WEEK_SATURDAY:
+                if const.DAY_OF_WEEK_MONDAY <= day_of_week <= const.DAY_OF_WEEK_SATURDAY:
                     if day_of_week <= const.DAY_OF_WEEK_FRIDAY:
                         # Set monday to saturday from 7:00 to 22:00 to F2
                         self.matrix[day_of_week,
@@ -313,7 +313,7 @@ class RoutineOptimizer:
         for _, i in enumerate(min_indices):
             # If the cost of the routine at the current iteration is greater than the original cost, return
             if min_values[i] >= original_routine_cost:
-                return
+                return None
 
             old_when = routine.when
             new_when = routine.when.replace(
@@ -328,6 +328,8 @@ class RoutineOptimizer:
             except ConflictError:
                 routine.when = old_when
                 continue
+
+        return None
 
     def __routine_cost(self, routine: Routine, when: datetime) -> float:
         actions_durations = [

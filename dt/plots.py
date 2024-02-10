@@ -35,7 +35,7 @@ def __get_appliance_name(appliance: Appliance):
 
 
 def __prepare_matrix_figure(appliances: list[Appliance], routines: list[Routine], config: EnergyConfig, title: str = "Consumptions"):
-    sorted_appliances = [a for a in sorted(appliances, key=lambda a: a.id)]
+    sorted_appliances = list(sorted(appliances, key=lambda a: a.id))
     appliances_names = [__get_appliance_name(a) for a in sorted_appliances]
     hours_in_day = [f"{h:02d}:00" for h in range(0, 24)]
 
@@ -108,9 +108,11 @@ def plot_simulated_matrix(repository: DataRepository, config: EnergyConfig):
 
     plt.show()
 
-
-if __name__ == "__main__":
+def run_plots():
     config = Config.from_toml(os.environ["DT_CONFIG_FILE"])
     repository = RepositoryFactory.create(config.database_config)
 
     plot_simulated_matrix(repository, config.energy_config)
+
+if __name__ == "__main__":
+    run_plots()
