@@ -1,50 +1,40 @@
-import { List } from "flowbite-react";
+import { Alert } from "flowbite-react";
+import { MdInfo, MdError } from "react-icons/md";
+import ConsumptionChart from "../ConsumptionChart";
 
-const ErrorsList = ({ errors }) => {
-  return (
-    <div>
-      <h3 className="text-lg font-semibold">Errors</h3>
-      <List>
-        {errors.map((error, index) => (
-          <List.Item key={index}>{error.message}</List.Item>
-        ))}
-      </List>
-    </div>
-  );
-};
+const SimulationResult = ({ consumptionsPerHour, simulationStatus }) => {
+  const series = [
+    {
+      name: "Consumption with only existing routines (kW)",
+      data: consumptionsPerHour,
+    },
+    {
+      name: "Consumption with simulated routine (kW)",
+      data: simulationStatus.consumptionsPerHour,
+    },
+  ];
 
-const RecommendationsList = ({ recommendations }) => {
-  return (
-    <div>
-      <h3 className="text-lg font-semibold">Recommendations</h3>
-      <ul>
-        {recommendations.map((recommendation, index) => (
-          <li key={index}>{recommendation.message}</li>
-        ))}
-      </ul>
-    </div>
-  );
-};
-
-const SimulationResult = ({ errors, recommendations, className }) => {
-  const hasErrors = errors && errors.length > 0;
-  const hasRecommendations = recommendations && recommendations.length > 0;
-  const hasResults = hasErrors || hasRecommendations;
+  if (simulationStatus.consumptionsPerHour?.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-96 rounded-lg bg-gray-200 dark:bg-gray-700">Results will be shown here</div>
+    )
+  }
 
   return (
-    <div
-      className={`flex rounded-lg bg-gray-50 p-4 dark:bg-gray-700 ${!hasResults && "items-center justify-center"} ${className}`}
-    >
-      {hasResults ? (
-        <div className="flex flex-col gap-8">
-          {hasErrors && <ErrorsList errors={errors} />}
-          {hasRecommendations && (
-            <RecommendationsList recommendations={recommendations} />
-          )}
-        </div>
-      ) : (
-        <p>Simulation results will be shown here</p>
-      )}
+    <div className="flex flex-col gap-8">
+      <div className="w-full h-96">
+        <ConsumptionChart series={series} className="w-full" />
+      </div>
+      {simulationStatus.errors.map((error, index) => (
+        <Alert color="failure" icon={MdError} key={`e-${index}`}>
+          <span className="font-medium">{error.message}</span>
+        </Alert>
+      ))}
+      {simulationStatus.recommendations.map((recommendation, index) => (
+        <Alert color="info" icon={MdInfo} key={`r-${index}`}>
+          <span className="font-medium">{recommendation.message}</span>
+        </Alert>
+      ))}
     </div>
   );
 };

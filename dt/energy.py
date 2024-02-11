@@ -29,7 +29,7 @@ class DisableRoutineRecommendation(Recommendation):
 
 class ChangeStartTimeRecommendation(Recommendation):
     def __init__(self, new_time: datetime, energy_savings: float) -> None:
-        super().__init__(f"Starting the routine at {new_time} can save {energy_savings}W.",
+        super().__init__(f"Starting the routine at {new_time.strftime('%H:%M')} can save {'{:.3f}'.format(energy_savings)}W.",
                          {"new_time": new_time, "energy_savings": energy_savings})
 
 
@@ -283,7 +283,8 @@ class CostsMatrix:
         Returns:
             float: The cost of the electricity for the sequence.
         """
-        test = self.matrix[when.weekday(), when.hour:(when + duration).hour + 1].sum()
+        test = self.matrix[when.weekday(), when.hour:(
+            when + duration).hour + 1].sum()
         return test
 
 

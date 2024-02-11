@@ -1,7 +1,10 @@
 import { createContext, useState, useEffect } from "react";
 
-import * as noConflict from "../test-routines/no_conflict.json";
-const rawSimulatedRoutines = [noConflict];
+import * as noConflict from "../test_routines/no_conflict.json";
+import * as maxPowerExceeded from "../test_routines/max_power_exceeded.json";
+import * as conflictingModes from "../test_routines/conflicting_modes.json";
+
+const rawSimulatedRoutines = [noConflict, maxPowerExceeded, conflictingModes];
 
 export const DigitalTwinContext = createContext({
   consumptionNow: 0,
@@ -14,9 +17,11 @@ export const DigitalTwinContext = createContext({
     isSimulating: false,
     errors: [],
     recommendations: [],
+    consumptionsPerHour: [],
   },
   hasError: false,
   simulate: () => {},
+  resetSimulationStatus: () => {},
 });
 
 const apiFetch = async (path, method = "GET", body = null) => {
@@ -46,7 +51,15 @@ const DigitalTwinContextProvider = ({ children }) => {
     isSimulating: false,
     errors: [],
     recommendations: [],
+    consumptionsPerHour: [],
   });
+
+  const hourDates = Array.from({ length: 24 }, (_, hour) => {
+    const dateAtHour = new Date(timeNow);
+    dateAtHour.setHours(hour, 0);
+    return dateAtHour.toISOString();
+  });
+  const datesQueryParam = hourDates.map((date) => `when=${date}`).join("&");
 
   const fetchTotalConsumption = async () => {
     const totalConsumption = (await apiFetch(`/consumption/total/${timeNow}`))
@@ -92,17 +105,10 @@ const DigitalTwinContextProvider = ({ children }) => {
   };
 
   const fetchConsumptionsPerHour = async () => {
-    const dates = Array.from({ length: 24 }, (_, hour) => {
-      const dateAtHour = new Date(timeNow);
-      dateAtHour.setHours(hour, 0);
-      return dateAtHour.toISOString();
-    });
-    const datesQueryParam = dates.map((date) => `when=${date}`).join("&");
-
     const { value: consumptionsPerHour } = await apiFetch(
       `/consumption/total/?${datesQueryParam}`,
     );
-    setConsumptionsPerHour(consumptionsPerHour);
+    setConsumptionsPerHour(consumptionsPerHour.map((c) => c / 1000));
   };
 
   const fetchRoutines = async () => {
@@ -129,19 +135,33 @@ const DigitalTwinContextProvider = ({ children }) => {
   };
 
   const simulate = async (routine) => {
-    setSimulationStatus({
-      isSimulating: true,
-      errors: [],
-      recommendations: [],
-    });
-
     const { errors, recommendations } = await apiFetch(
       "/simulate",
       "POST",
       routine,
     );
 
-    setSimulationStatus({ isSimulating: false, errors, recommendations });
+    const { value: consumptionsPerHour } = await apiFetch(
+      `/simulate/consumption/total/?${datesQueryParam}`,
+      "POST",
+      routine,
+    );
+
+    setSimulationStatus({
+      isSimulating: false,
+      errors,
+      recommendations,
+      consumptionsPerHour: consumptionsPerHour.map((c) => c / 1000),
+    });
+  };
+
+  const resetSimulationStatus = () => {
+    setSimulationStatus({
+      isSimulating: false,
+      errors: [],
+      recommendations: [],
+      consumptionsPerHour: [],
+    });
   };
 
   useEffect(() => {
@@ -167,6 +187,7 @@ const DigitalTwinContextProvider = ({ children }) => {
         simulationStatus,
         hasError,
         simulate,
+        resetSimulationStatus,
       }}
     >
       {children}
