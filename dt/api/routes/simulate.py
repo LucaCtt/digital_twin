@@ -3,9 +3,8 @@ from enum import Enum
 from fastapi import APIRouter, Query
 
 from dt.api import schemas
-from dt.api.routes import routine
 from dt.data import DataRepository, Routine, RoutineAction
-from dt.energy import ConsumptionsMatrix, CostsMatrix, RoutineOptimizer
+from dt.energy import ConsumptionsMatrix, CostsMatrix, DisableRoutineRecommendation, InconsistentRoutinesError, MaxPowerExceededError, RoutineOptimizer
 from .. import errors
 
 
@@ -13,19 +12,51 @@ def get_simulate_router(repository: DataRepository, matrix: ConsumptionsMatrix, 
     router = APIRouter(tags=tags, prefix="/simulate")
 
     @router.post("")
-    async def post_simulate(routine_in: schemas.RoutineIn) -> schemas.BaseResponse:
+    async def post_simulate(routine_in: schemas.RoutineIn) -> schemas.ListResponse[schemas.RecommendationOut]:
         """Simulates the addition of a routine.
         """
+        error = None
+        recommendations = []
 
         routine_model = __routine_schema_to_model(routine_in, repository)
-        # Try to add the routine to the matrix to see if any conflicts are thrown
-        matrix.add_routine(routine_model)
+        try:
+            # Try to add the routine to the matrix to see if any conflicts are thrown
+            matrix.add_routine(routine_model)
+        except InconsistentRoutinesError as e:
+            error = e
+
+            conflicting_routines = [
+                e.context["first_routine"], e.context["second_routine"]]
+            for routine in conflicting_routines:
+                recommendations.append(
+                    DisableRoutineRecommendation(routine))
+
+        except MaxPowerExceededError as e:
+            error = e
+
+            most_consuming_routines = matrix.most_consuming_routines(
+                e.context["when"])
+            recommendations.append(
+                DisableRoutineRecommendation(most_consuming_routines[0]))
+
+        if error and error.context:
+            error.context = __context_to_schemas(error.context)
+
+        for recommendation in recommendations:
+            if recommendation.context:
+                recommendation.context = __context_to_schemas(
+                    recommendation.context)
 
         # If there are no conflicts, try to find the best start time for the routine
         optimizer = RoutineOptimizer(matrix, costs)
-        recommendation = optimizer.find_best_start_time(routine_model)
+        best_time_recommendation = optimizer.find_best_start_time(
+            routine_model)
+        if best_time_recommendation is not None:
+            recommendations.append(best_time_recommendation)
 
-        return schemas.BaseResponse(recommendations=[schemas.RecommendationOut.model_validate(recommendation)] if recommendation else [])
+        return schemas.ListResponse(value=[schemas.RecommendationOut.model_validate(r)
+                                           for r in recommendations],
+                                    error=schemas.ErrorOut(message=str(error), context=error.context) if error else None)
 
     @router.post("/consumption/{when}")
     async def post_consumptions(routine_in: schemas.RoutineIn, when: datetime) -> schemas.ListResponse[schemas.ApplianceConsumption]:
@@ -110,3 +141,22 @@ def __routine_schema_to_model(routine_in: schemas.RoutineIn, repository: DataRep
     routine_dict["when"] = datetime.strptime(routine_dict["when"], "%H:%M")
     routine_dict["actions"] = actions
     return Routine(**routine_dict)
+
+
+def __context_to_schemas(context: dict) -> dict:
+    """Converts a context dictionary to a dictionary of schemas.
+
+    Args:
+        context (dict): The context dictionary.
+
+    Returns:
+        dict: The dictionary of schemas.
+    """
+
+    for key, value in context.items():
+        if type(value) is Routine:
+            context[key] = schemas.RoutineOut.model_validate(value)
+        if type(value) is RoutineAction:
+            context[key] = schemas.RoutineActionOut.model_validate(value)
+
+    return context

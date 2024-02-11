@@ -24,12 +24,12 @@ class DisableRoutineRecommendation(Recommendation):
 
     def __init__(self, routine: Routine) -> None:
         super().__init__(
-            f"Disable routine {routine.name}.", {"routine": routine})
+            f"Disable routine \"{routine.name}\"", {"routine": routine})
 
 
 class ChangeStartTimeRecommendation(Recommendation):
     def __init__(self, new_time: datetime, energy_savings: float) -> None:
-        super().__init__(f"Starting the routine at {new_time.strftime('%H:%M')} can save {'{:.3f}'.format(energy_savings)}W.",
+        super().__init__(f"Starting the routine at {new_time.strftime('%H:%M')} can save {'{:.3f}'.format(energy_savings)}€",
                          {"new_time": new_time, "energy_savings": energy_savings})
 
 
@@ -37,10 +37,9 @@ class ConflictError(Exception):
     """Error raised when there is a conflict in the routines.
     """
 
-    def __init__(self, message: str, context: dict[str, Any], recommendations: list[Recommendation] | None = None) -> None:
+    def __init__(self, message: str, context: dict[str, Any]) -> None:
         super().__init__(message)
         self.context = context
-        self.recommendations = recommendations
 
 
 class InconsistentRoutinesError(ConflictError):
@@ -48,33 +47,29 @@ class InconsistentRoutinesError(ConflictError):
     """
 
     def __init__(self, first_routine: Routine, second_routine: Routine, first_action: RoutineAction, second_action: RoutineAction):
-        recommendations: list[Recommendation] = [DisableRoutineRecommendation(
-            first_routine), DisableRoutineRecommendation(second_routine)]
         context = {
             "first_routine": first_routine,
-            "second_routine": second_routine,
             "first_action": first_action,
+            "second_routine": second_routine,
             "second_action": second_action
         }
 
         super().__init__(
-            f"Appliance {first_action.appliance.device} has conflicting modes.", context, recommendations)
+            f"Appliance {first_action.appliance.device} has conflicting modes.", context)
 
 
 class MaxPowerExceededError(ConflictError):
     """Error raised when the power consumption of the house is greater than the maximum power consumption.
     """
 
-    def __init__(self, max_power: float, when: datetime, routines_to_disable: list[Routine]):
-        recommendations: list[Recommendation] = [DisableRoutineRecommendation(
-            r) for r in routines_to_disable]
+    def __init__(self, max_power: float, when: datetime):
         context = {
             "max_power": max_power,
             "when": when,
         }
 
         super().__init__(
-            f"Power consumption of the house is greater than {max_power} at {when}.", context, recommendations)
+            f"Power consumption of the house is greater than {max_power} at {when}.", context)
 
 
 class ConsumptionsMatrix():
@@ -107,7 +102,7 @@ class ConsumptionsMatrix():
                 if routine == other_routine:
                     continue
 
-                conflicting_actions = routine.actions_conflict_with(
+                conflicting_actions = routine.conflicting_actions(
                     other_routine)
                 if conflicting_actions is None:
                     continue
@@ -132,12 +127,19 @@ class ConsumptionsMatrix():
         for minute_of_day in range(const.MINUTES_IN_DAY):
             if float(np.sum(self.matrix[minute_of_day, :])) > config.max_power:
                 time = datetime.today().replace(hour=minute_of_day//60, minute=minute_of_day % 60)
-                most_consuming = sorted(
-                    routines, key=lambda r: r.power_consumption_at(time), reverse=True)
+                raise MaxPowerExceededError(config.max_power, time)
 
-                # Convert minute of day to datetime
-                raise MaxPowerExceededError(
-                    config.max_power, time, most_consuming[:2])
+    def most_consuming_routines(self, when: datetime) -> list[Routine]:
+        """Return the routines ordered by power consumption at a given time.
+
+        Args:
+            when (datetime): The time to order the routines.
+
+        Returns:
+            list[Routine]: The routines ordered by power consumption at the given time.
+        """
+
+        return sorted(self.routines, key=lambda r: r.power_consumption_at(when), reverse=True)
 
     def add_routine(self, routine: Routine) -> ConsumptionsMatrix:
         """Creates a new matrix with a new routine added.
@@ -261,6 +263,10 @@ class CostsMatrix:
                         self.matrix[day_of_week,
                                     7:22+1] = config.energy_rates_prices[1]
 
+        # The matrix is in €/kWh, but the codebase uses W,
+        # so it is converted to €/Wh
+        self.matrix = self.matrix / 1000
+
     def get_cost(self, when: datetime) -> float:
         """Calculate the eletricity cost at a given time.
 
@@ -334,6 +340,7 @@ class RoutineOptimizer:
         return None
 
     def __routine_cost(self, routine: Routine, when: datetime) -> float:
-        actions_durations = [
-            action.duration for action in routine.actions if action.duration is not None]
-        return np.sum([self.costs_matrix.get_duration_cost(when, timedelta(minutes=duration)) for duration in actions_durations])
+        costs = [self.costs_matrix.get_duration_cost(when, timedelta(minutes=action.duration))*action.mode.power_consumption
+                 for action in routine.actions if action.duration is not None]
+
+        return np.sum(costs)

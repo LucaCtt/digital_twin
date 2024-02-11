@@ -112,7 +112,7 @@ class Routine:
         self.when = when
         self.actions = actions
 
-    def actions_conflict_with(self, other: Routine) -> tuple[RoutineAction, RoutineAction] | None:
+    def conflicting_actions(self, other: Routine) -> tuple[RoutineAction, RoutineAction] | None:
         """Check if any action in the routine conflicts with any action in another routine.
 
         Args:
@@ -124,20 +124,29 @@ class Routine:
 
         if not self.enabled or not other.enabled:
             return None
+        
+        def actions_overlap(self_action: RoutineAction, other_action: RoutineAction) -> bool:
+            if self_action.appliance.id != other_action.appliance.id:
+                return False
 
-        def durations_overlap(when1: datetime, duration1: int, when2: datetime, duration2: int) -> bool:
-            end1 = when1 + timedelta(minutes=duration1)
-            end2 = when2 + timedelta(minutes=duration2)
+            if self_action.mode.id == other_action.mode.id:
+                return False
+            
+            if self_action.duration is None and other_action.duration is None:
+                return True
 
-            return when1 < end2 and when2 < end1
+            if self_action.duration is None and other_action.duration is not None and other.when + timedelta(minutes=other_action.duration) > self.when:
+                return True
+
+            if self_action.duration is not None and other_action.duration is None and self.when + timedelta(minutes=self_action.duration) > other.when:
+                return True
+
+            assert self_action.duration is not None and other_action.duration is not None
+            return self.when < other.when + timedelta(minutes=other_action.duration) and other.when < self.when + timedelta(minutes=self_action.duration)
 
         for action in self.actions:
             for other_action in other.actions:
-                if action.appliance == other_action.appliance and \
-                        action.mode != other_action.mode and \
-                        action.duration and \
-                        other_action.duration and \
-                        durations_overlap(self.when, action.duration, other.when, other_action.duration):
+                if actions_overlap(action, other_action):
                     return action, other_action
 
         return None

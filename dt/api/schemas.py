@@ -131,8 +131,7 @@ class BaseResponse(BaseModel):
     The list of recommendations should always be null rather than an empty list.
     """
 
-    errors: list[ErrorOut] = []
-    recommendations: list[RecommendationOut] = []
+    error: ErrorOut | None = None
 
 
 T = TypeVar("T")

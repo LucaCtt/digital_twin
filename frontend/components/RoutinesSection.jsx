@@ -38,9 +38,9 @@ const RoutinesSection = () => {
                               located in the {action.appliance.location}
                             </span>
                           )}{" "}
-                          to <i>{action.mode.name}</i> for{" "}
+                          to <i>{action.mode.name}</i>{" "}
                           {action.duration ? (
-                            <span>{action.duration} minutes</span>
+                            <span>for {action.duration} minutes</span>
                           ) : (
                             <span>until the end of the day</span>
                           )}

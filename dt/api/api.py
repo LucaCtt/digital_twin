@@ -96,7 +96,7 @@ def create_api(repository: DataRepository, config: EnergyConfig, title="Digital 
         See [FastAPI documentation](https://fastapi.tiangolo.com/tutorial/handling-errors/#override-the-httpexception-error-handler) for more information.
         """
 
-        return JSONResponse(status_code=exc.status_code, content=jsonable_encoder(schemas.BaseResponse(errors=[schemas.ErrorOut(message=exc.detail)])))
+        return JSONResponse(status_code=exc.status_code, content=jsonable_encoder(schemas.BaseResponse(error=schemas.ErrorOut(message=exc.detail))))
 
     @api.exception_handler(RequestValidationError)
     async def validation_exception_handler(_: fastapi.Request, exc: RequestValidationError):
@@ -106,7 +106,7 @@ def create_api(repository: DataRepository, config: EnergyConfig, title="Digital 
         """
 
         return JSONResponse(status_code=fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY,
-                            content=jsonable_encoder(schemas.BaseResponse(errors=[schemas.ErrorOut(message=str(exc))])))
+                            content=jsonable_encoder(schemas.BaseResponse(error=schemas.ErrorOut(message=str(exc)))))
 
     @api.exception_handler(ConflictError)
     async def conflict_error_handler(_: fastapi.Request, exc: ConflictError):
@@ -114,10 +114,7 @@ def create_api(repository: DataRepository, config: EnergyConfig, title="Digital 
         """
 
         error = schemas.ErrorOut(message=str(exc), context=exc.context)
-        recommendations = [schemas.RecommendationOut(message=r.message, context=r.context)
-
-                           for r in exc.recommendations] if exc.recommendations else []
         return JSONResponse(status_code=fastapi.status.HTTP_409_CONFLICT,
-                            content=jsonable_encoder(schemas.BaseResponse(errors=[error], recommendations=recommendations)))
+                            content=jsonable_encoder(schemas.BaseResponse(error=schemas.ErrorOut(message=str(exc)))))
 
     return api

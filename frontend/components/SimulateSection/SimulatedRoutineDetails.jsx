@@ -19,9 +19,9 @@ const SimulatedRoutineDetails = ({ routine }) => {
             {action.appliance.location && (
               <span>located in the {action.appliance.location}</span>
             )}{" "}
-            to <i>{action.mode.name}</i> for{" "}
+            to <i>{action.mode.name}</i>{" "}
             {action.duration ? (
-              <span>{action.duration} minutes</span>
+              <span>for {action.duration/60} minutes</span>
             ) : (
               <span>until the end of the day</span>
             )}

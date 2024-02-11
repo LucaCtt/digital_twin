@@ -50,7 +50,7 @@ const ConsumptionChart = ({ series, className }) => {
         },
       },
       min: 0,
-      max: 3,
+      max: 3.5,
       decimalsInFloat: 3,
       stepSize: 0.5,
     },

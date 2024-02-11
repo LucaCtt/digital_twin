@@ -15,7 +15,8 @@ export const DigitalTwinContext = createContext({
   simulatedRoutines: [],
   simulationStatus: {
     isSimulating: false,
-    errors: [],
+    isSimulationDone: false,
+    error: null,
     recommendations: [],
     consumptionsPerHour: [],
   },
@@ -49,7 +50,8 @@ const DigitalTwinContextProvider = ({ children }) => {
   const [simulatedRoutines, setSimulatedRoutines] = useState([]);
   const [simulationStatus, setSimulationStatus] = useState({
     isSimulating: false,
-    errors: [],
+    isSimulationDone: false,
+    error: null,
     recommendations: [],
     consumptionsPerHour: [],
   });
@@ -97,7 +99,7 @@ const DigitalTwinContextProvider = ({ children }) => {
           (appliance) => appliance.id === action.appliance_id,
         );
         const mode = appliance.modes.find((mode) => mode.id === action.mode_id);
-        return { ...action, mode, appliance, duration: action.duration / 60 };
+        return { ...action, mode, appliance, duration: action.duration };
       });
       return { ...routine, actions: simulatedActions };
     });
@@ -135,11 +137,30 @@ const DigitalTwinContextProvider = ({ children }) => {
   };
 
   const simulate = async (routine) => {
-    const { errors, recommendations } = await apiFetch(
+    setSimulationStatus({
+      isSimulating: true,
+      isSimulationDone: false,
+      error: null,
+      recommendations: [],
+      consumptionsPerHour: [],
+    });
+
+    const { error, value: recommendations } = await apiFetch(
       "/simulate",
       "POST",
       routine,
     );
+
+    if (error) {
+      setSimulationStatus({
+        isSimulating: false,
+        isSimulationDone: true,
+        error,
+        recommendations,
+        consumptionsPerHour: [],
+      });
+      return;
+    }
 
     const { value: consumptionsPerHour } = await apiFetch(
       `/simulate/consumption/total/?${datesQueryParam}`,
@@ -149,7 +170,8 @@ const DigitalTwinContextProvider = ({ children }) => {
 
     setSimulationStatus({
       isSimulating: false,
-      errors,
+      isSimulationDone: true,
+      error: null,
       recommendations,
       consumptionsPerHour: consumptionsPerHour.map((c) => c / 1000),
     });
@@ -158,7 +180,8 @@ const DigitalTwinContextProvider = ({ children }) => {
   const resetSimulationStatus = () => {
     setSimulationStatus({
       isSimulating: false,
-      errors: [],
+      isSimulationDone: false,
+      error: null,
       recommendations: [],
       consumptionsPerHour: [],
     });
