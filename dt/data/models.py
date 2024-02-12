@@ -124,14 +124,14 @@ class Routine:
 
         if not self.enabled or not other.enabled:
             return None
-        
+
         def actions_overlap(self_action: RoutineAction, other_action: RoutineAction) -> bool:
             if self_action.appliance.id != other_action.appliance.id:
                 return False
 
             if self_action.mode.id == other_action.mode.id:
                 return False
-            
+
             if self_action.duration is None and other_action.duration is None:
                 return True
 
@@ -161,4 +161,5 @@ class Routine:
             float: The power consumption of the routine at the given time.
         """
         return sum(action.mode.power_consumption for action in self.actions
-                   if action.duration and self.when <= when <= self.when + timedelta(minutes=action.duration))
+                   if (not action.duration and self.when <= when) or
+                   (action.duration and self.when <= when <= self.when + timedelta(minutes=action.duration)))

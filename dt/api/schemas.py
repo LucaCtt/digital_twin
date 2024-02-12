@@ -9,6 +9,7 @@ There is duplication the fields of the schemas and the model, but I don't know h
 from __future__ import annotations
 
 from datetime import datetime
+from enum import Enum
 from typing import Any, Generic, TypeVar
 from pydantic import BaseModel
 
@@ -101,18 +102,19 @@ class ApplianceConsumption(BaseModel):
     consumption: float
 
 
+class RecommendationType(str, Enum):
+    disable_routine = "DISABLE_ROUTINE"
+    change_start_time = "CHANGE_ROUTINE_START_TIME"
+
+
 class RecommendationOut(BaseModel):
     """The schema for a recommendation.
 
     The context represents additional information about the recommendation.
     """
 
-    message: str
-    context: dict[str, Any] | None = None
-
-    # Enable creating an instance of this schema from a model.
-    class Config:
-        from_attributes = True
+    type: RecommendationType
+    context: dict[str, Any] = {}
 
 
 class ErrorOut(BaseModel):

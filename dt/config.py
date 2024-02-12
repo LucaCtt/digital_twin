@@ -24,7 +24,7 @@ class DatabaseConfig:
 class Config:
     def __init__(self, config: dict[str, Any]) -> None:
         self.energy_config = EnergyConfig(
-            config["energy"]["max_power"],
+            config["energy"]["max_power"] * 1000,
             config["energy"]["energy_rates_number"],
             config["energy"]["energy_rates_prices"])
 

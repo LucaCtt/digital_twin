@@ -9,30 +9,6 @@ from dt.data import Appliance, Routine, RoutineAction
 from dt import const
 
 
-class Recommendation(ABC):
-    """A recommendation to solve a conflict or to improve the energy consumption.
-    """
-
-    def __init__(self, message: str, context: dict[str, Any]) -> None:
-        self.message = message
-        self.context = context
-
-
-class DisableRoutineRecommendation(Recommendation):
-    """A recommendation to disable a routine.
-    """
-
-    def __init__(self, routine: Routine) -> None:
-        super().__init__(
-            f"Disable routine \"{routine.name}\"", {"routine": routine})
-
-
-class ChangeStartTimeRecommendation(Recommendation):
-    def __init__(self, new_time: datetime, energy_savings: float) -> None:
-        super().__init__(f"Starting the routine at {new_time.strftime('%H:%M')} can save {'{:.3f}'.format(energy_savings)}€",
-                         {"new_time": new_time, "energy_savings": energy_savings})
-
-
 class ConflictError(Exception):
     """Error raised when there is a conflict in the routines.
     """
@@ -46,16 +22,13 @@ class InconsistentRoutinesError(ConflictError):
     """Error raised when there are two routines with conflicting actions.
     """
 
-    def __init__(self, first_routine: Routine, second_routine: Routine, first_action: RoutineAction, second_action: RoutineAction):
-        context = {
-            "first_routine": first_routine,
-            "first_action": first_action,
-            "second_routine": second_routine,
-            "second_action": second_action
-        }
-
+    def __init__(self, routines: list[Routine], appliance: Appliance):
         super().__init__(
-            f"Appliance {first_action.appliance.device} has conflicting modes.", context)
+            f"\"{appliance.device}\" is set to conflicting modes.",
+            {"routines": routines, "appliance": appliance})
+
+        self.routines = routines
+        self.appliance = appliance
 
 
 class MaxPowerExceededError(ConflictError):
@@ -63,13 +36,11 @@ class MaxPowerExceededError(ConflictError):
     """
 
     def __init__(self, max_power: float, when: datetime):
-        context = {
-            "max_power": max_power,
-            "when": when,
-        }
-
         super().__init__(
-            f"Power consumption of the house is greater than {max_power} at {when}.", context)
+            f"Power consumption of the house is greater than {max_power} at {when.strftime('%H:%M')}.",
+            {"max_power": max_power, "when": when})
+        self.max_power = max_power
+        self.when = when
 
 
 class ConsumptionsMatrix():
@@ -107,8 +78,7 @@ class ConsumptionsMatrix():
                 if conflicting_actions is None:
                     continue
 
-                raise InconsistentRoutinesError(
-                    routine, other_routine, conflicting_actions[0], conflicting_actions[1])
+                raise InconsistentRoutinesError([routine, other_routine], conflicting_actions[0].appliance)
 
         for routine in routines:
             if not routine.enabled:
@@ -125,7 +95,14 @@ class ConsumptionsMatrix():
 
         # Check that the power consumption of each appliance is not greater than the maximum power consumption of the house
         for minute_of_day in range(const.MINUTES_IN_DAY):
-            if float(np.sum(self.matrix[minute_of_day, :])) > config.max_power:
+            sum = 0
+            for appliance_id, mode_id in enumerate(self.matrix[minute_of_day]):
+                appliance = next(
+                    a for a in self.appliances if a.id == appliance_id)
+                mode = next(m for m in appliance.modes if m.id == mode_id)
+                sum += mode.power_consumption
+
+            if sum > config.max_power:
                 time = datetime.today().replace(hour=minute_of_day//60, minute=minute_of_day % 60)
                 raise MaxPowerExceededError(config.max_power, time)
 
@@ -299,7 +276,7 @@ class RoutineOptimizer:
         self.consumptions_matrix = consumptions_matrix
         self.costs_matrix = costs_matrix
 
-    def find_best_start_time(self, routine: Routine) -> ChangeStartTimeRecommendation | None:
+    def find_best_start_time(self, routine: Routine) -> tuple[datetime, float] | None:
         # Calculate the latest end time of the routine so that
         # the longest running action is completed before the end of the day.
         latest_end_time = min(
@@ -332,7 +309,7 @@ class RoutineOptimizer:
             try:
                 routine.when = new_when
                 self.consumptions_matrix.add_routine(routine)
-                return ChangeStartTimeRecommendation(new_when, original_routine_cost - min_values[i])
+                return new_when, original_routine_cost - min_values[i]
             except ConflictError:
                 routine.when = old_when
                 continue

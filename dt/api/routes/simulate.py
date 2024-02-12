@@ -3,8 +3,8 @@ from enum import Enum
 from fastapi import APIRouter, Query
 
 from dt.api import schemas
-from dt.data import DataRepository, Routine, RoutineAction
-from dt.energy import ConsumptionsMatrix, CostsMatrix, DisableRoutineRecommendation, InconsistentRoutinesError, MaxPowerExceededError, RoutineOptimizer
+from dt.data import DataRepository, Routine, RoutineAction, Appliance
+from dt.energy import ConsumptionsMatrix, CostsMatrix, InconsistentRoutinesError, MaxPowerExceededError, RoutineOptimizer
 from .. import errors
 
 
@@ -25,38 +25,31 @@ def get_simulate_router(repository: DataRepository, matrix: ConsumptionsMatrix, 
         except InconsistentRoutinesError as e:
             error = e
 
-            conflicting_routines = [
-                e.context["first_routine"], e.context["second_routine"]]
-            for routine in conflicting_routines:
-                recommendations.append(
-                    DisableRoutineRecommendation(routine))
+            for routine in e.routines:
+                recommendation = schemas.RecommendationOut(type=schemas.RecommendationType.disable_routine,
+                                                           context={"routine": schemas.RoutineOut.model_validate(routine)})
+                recommendations.append(recommendation)
 
         except MaxPowerExceededError as e:
             error = e
 
-            most_consuming_routines = matrix.most_consuming_routines(
-                e.context["when"])
-            recommendations.append(
-                DisableRoutineRecommendation(most_consuming_routines[0]))
+            most_consuming = matrix.most_consuming_routines(e.when)
+            recommendation = schemas.RecommendationOut(type=schemas.RecommendationType.disable_routine,
+                                                       context={"routine": schemas.RoutineOut.model_validate(most_consuming[0])})
+            recommendations.append(recommendation)
 
-        if error and error.context:
-            error.context = __context_to_schemas(error.context)
-
-        for recommendation in recommendations:
-            if recommendation.context:
-                recommendation.context = __context_to_schemas(
-                    recommendation.context)
-
-        # If there are no conflicts, try to find the best start time for the routine
+        # Try to find the best start time for the routine
         optimizer = RoutineOptimizer(matrix, costs)
-        best_time_recommendation = optimizer.find_best_start_time(
-            routine_model)
-        if best_time_recommendation is not None:
-            recommendations.append(best_time_recommendation)
+        search_result = optimizer.find_best_start_time(routine_model)
+        if search_result is not None:
+            best_start_time, savings = search_result
+            recommendation = schemas.RecommendationOut(type=schemas.RecommendationType.change_start_time,
+                                                       context={"when": best_start_time, "savings": savings})
+            recommendations.append(recommendation)
 
-        return schemas.ListResponse(value=[schemas.RecommendationOut.model_validate(r)
-                                           for r in recommendations],
-                                    error=schemas.ErrorOut(message=str(error), context=error.context) if error else None)
+        return schemas.ListResponse(value=recommendations,
+                                    error=schemas.ErrorOut(message=str(error),
+                                                           context=__context_to_schemas(error.context)) if error else None)
 
     @router.post("/consumption/{when}")
     async def post_consumptions(routine_in: schemas.RoutineIn, when: datetime) -> schemas.ListResponse[schemas.ApplianceConsumption]:
@@ -156,7 +149,11 @@ def __context_to_schemas(context: dict) -> dict:
     for key, value in context.items():
         if type(value) is Routine:
             context[key] = schemas.RoutineOut.model_validate(value)
+        if type(value) is list:
+            context[key] = [schemas.RoutineOut.model_validate(r) for r in value] 
         if type(value) is RoutineAction:
             context[key] = schemas.RoutineActionOut.model_validate(value)
+        if type(value) is Appliance:
+            context[key] = schemas.ApplianceOut.model_validate(value)
 
     return context

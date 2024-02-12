@@ -2,6 +2,28 @@ import { Alert } from "flowbite-react";
 import { MdInfo, MdError } from "react-icons/md";
 import ConsumptionChart from "../ConsumptionChart";
 
+const format_recommendation = ({ type, context }) => {
+  switch (type) {
+    case "DISABLE_ROUTINE":
+      return (
+        <span>
+          Disable routine <i>{context["routine"]["name"]}</i>
+        </span>
+      );
+    case "CHANGE_ROUTINE_START_TIME":
+      const hour = new Date(context["when"]).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      return (
+        <span>
+          Start the routine at {hour} to save {context["savings"].toFixed(4)}€
+        </span>
+      );
+  }
+};
+
 const SimulationResult = ({ consumptionsPerHour, simulationStatus }) => {
   const series = [
     {
@@ -40,7 +62,7 @@ const SimulationResult = ({ consumptionsPerHour, simulationStatus }) => {
         )}
         {simulationStatus.recommendations?.map((recommendation, index) => (
           <Alert color="info" icon={MdInfo} key={`r-${index}`}>
-            <span className="font-medium">{recommendation.message}</span>
+            {format_recommendation(recommendation)}
           </Alert>
         ))}
       </div>
