@@ -26,7 +26,7 @@ class Config:
         self.energy_config = EnergyConfig(
             config["energy"]["max_power"] * 1000,
             config["energy"]["energy_rates_number"],
-            config["energy"]["energy_rates_prices"])
+            [x / 1000 for x in config["energy"]["energy_rates_prices"]])
 
         self.database_config = DatabaseConfig(
             config["database"]["type"],

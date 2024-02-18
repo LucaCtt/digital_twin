@@ -230,19 +230,16 @@ class CostsMatrix:
                 # Set everything to F3
                 self.matrix[day_of_week, :] = config.energy_rates_prices[2]
 
-                if const.DAY_OF_WEEK_MONDAY <= day_of_week <= const.DAY_OF_WEEK_SATURDAY:
+                if day_of_week <= const.DAY_OF_WEEK_SATURDAY:
                     if day_of_week <= const.DAY_OF_WEEK_FRIDAY:
-                        # Set monday to saturday from 7:00 to 22:00 to F2
+                        self.matrix[day_of_week, 7] = config.energy_rates_prices[1]
                         self.matrix[day_of_week,
                                     8:18+1] = config.energy_rates_prices[0]
+                        self.matrix[day_of_week, 19:22+1] = config.energy_rates_prices[1]
                     else:
                         # Set monday to friday from 8:00 to 18:00 to F1
                         self.matrix[day_of_week,
                                     7:22+1] = config.energy_rates_prices[1]
-
-        # The matrix is in €/kWh, but the codebase uses W,
-        # so it is converted to €/Wh
-        self.matrix = self.matrix / 1000
 
     def get_cost(self, when: datetime) -> float:
         """Calculate the eletricity cost at a given time.
@@ -269,6 +266,14 @@ class CostsMatrix:
         test = self.matrix[when.weekday(), when.hour:(
             when + duration).hour + 1].sum()
         return test
+    
+    def raw_matrix(self) -> np.ndarray:
+        """Return the raw matrix.
+
+        Returns:
+            np.ndarray: The raw matrix.
+        """
+        return self.matrix
 
 
 class RoutineOptimizer:
