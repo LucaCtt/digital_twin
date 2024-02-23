@@ -14,7 +14,7 @@ def main():
 
     config = Config.from_toml(os.environ["DT_CONFIG_FILE"])
     repository = RepositoryFactory.create(config.database_config)
-    api = create_api(repository, config.energy_config)
+    api = create_api(repository, config.home_config)
 
     if os.environ.get("DT_BACKEND_URL") is None:
         port = 8000

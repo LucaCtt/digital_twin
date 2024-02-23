@@ -1,27 +1,26 @@
 import { Alert } from "flowbite-react";
-import { MdInfo, MdError } from "react-icons/md";
+import { MdInfo, MdError, MdPaid } from "react-icons/md";
 import ConsumptionChart from "../ConsumptionChart";
 
-const format_recommendation = ({ type, context }) => {
-  switch (type) {
-    case "DISABLE_ROUTINE":
-      return (
-        <span>
-          Disable routine <i>{context["routine"]["name"]}</i>
-        </span>
-      );
-    case "CHANGE_ROUTINE_START_TIME":
-      const hour = new Date(context["when"]).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+const DisableRoutinesRecommendation = ({ routines }) => (
+  <Alert color="info" icon={MdInfo}>
+    Disable one of the following routines:{" "}
+    <i>{routines.map((r) => r.name).join(", ")}</i>
+  </Alert>
+);
 
-      return (
-        <span>
-          Start the routine at {hour} to save {context["savings"].toFixed(4)}€
-        </span>
-      );
-  }
+const ChangeRoutineStartTimeRecommendation = ({ when, savings }) => {
+  const hour = new Date(when).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  return (
+    <Alert color="success" icon={MdPaid}>
+      Starting the routine at {hour} can save {(savings * 30).toFixed(2)}€ over
+      a month
+    </Alert>
+  );
 };
 
 const SimulationResult = ({ consumptionsPerHour, simulationStatus }) => {
@@ -44,6 +43,14 @@ const SimulationResult = ({ consumptionsPerHour, simulationStatus }) => {
     );
   }
 
+  const disableRoutineRecommendations = simulationStatus.recommendations.filter(
+    (s) => s.type === "DISABLE_ROUTINE",
+  );
+  const changeRoutineStartTimeRecommendations =
+    simulationStatus.recommendations.filter(
+      (s) => s.type === "CHANGE_ROUTINE_START_TIME",
+    );
+
   return (
     <div className="flex flex-col gap-8">
       {!simulationStatus.error && (
@@ -60,11 +67,21 @@ const SimulationResult = ({ consumptionsPerHour, simulationStatus }) => {
             </span>
           </Alert>
         )}
-        {simulationStatus.recommendations?.map((recommendation, index) => (
-          <Alert color="info" icon={MdInfo} key={`r-${index}`}>
-            {format_recommendation(recommendation)}
-          </Alert>
-        ))}
+        {disableRoutineRecommendations.length > 0 && (
+          <DisableRoutinesRecommendation
+            routines={disableRoutineRecommendations.map(
+              (r) => r.context.routine,
+            )}
+          />
+        )}
+        {changeRoutineStartTimeRecommendations.length > 0 &&
+          changeRoutineStartTimeRecommendations.map((r) => (
+            <ChangeRoutineStartTimeRecommendation
+              when={r.context.when}
+              savings={r.context.savings}
+              key={r.context.when}
+            />
+          ))}
       </div>
     </div>
   );

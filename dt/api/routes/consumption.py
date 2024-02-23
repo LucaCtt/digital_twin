@@ -4,11 +4,11 @@ from fastapi import APIRouter, Query
 
 from dt.api import schemas
 from dt.data import DataRepository
-from dt.energy import ConsumptionsMatrix
+from dt.energy import StateMatrix
 from .. import errors
 
 
-def get_consumption_router(repository: DataRepository, matrix: ConsumptionsMatrix, tags: list[str | Enum]) -> APIRouter:
+def get_consumption_router(repository: DataRepository, matrix: StateMatrix, tags: list[str | Enum]) -> APIRouter:
     router = APIRouter(tags=tags, prefix="/consumption")
 
     @router.get("/{when}")

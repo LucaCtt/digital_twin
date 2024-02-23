@@ -1,10 +1,12 @@
-[energy]
+[home]
 max_power = 3 # Maximum power draw, in kW
 energy_rates_number = 2 # Number of energy rates, e.g. 2 means dual-rate
 energy_rates_prices = [
     0.131870,
     0.111492,
 ] # Price for each energy rate, in €/kWh
+activity_hours = ["4:00", "23:00"] # Start and end of the activity period
+
 
 [database]
 type = "json"

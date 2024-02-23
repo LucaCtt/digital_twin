@@ -1,10 +1,9 @@
 from __future__ import annotations
-from abc import ABC
 from datetime import datetime, timedelta
 from typing import Any
 import numpy as np
 
-from dt.config import EnergyConfig
+from dt.config import HomeConfig
 from dt.data import Appliance, Routine, RoutineAction
 from dt import const
 
@@ -37,14 +36,14 @@ class MaxPowerExceededError(ConflictError):
 
     def __init__(self, max_power: float, when: datetime):
         super().__init__(
-            f"Power consumption of the house is greater than {max_power} at {when.strftime('%H:%M')}.",
+            f"Power consumption of the house is greater than {max_power/1000}kW at {when.strftime('%H:%M')}. This can cause a power cut-off.",
             {"max_power": max_power, "when": when})
         self.max_power = max_power
         self.when = when
 
 
-class ConsumptionsMatrix():
-    """A matrix that represents the power consumption of each appliance in each minute of the day.
+class StateMatrix():
+    """A matrix that represents the operation mode of each appliance in each minute of the day.
     A row is created for each minute of the day, and a column for each appliance.
     So if there are 10 appliances, the matrix will have 1440 rows and 10 columns.
     Currently the matrix is implemented as a numpy array of integers.
@@ -54,7 +53,7 @@ class ConsumptionsMatrix():
     with a new set of routines.
     """
 
-    def __init__(self, appliances: list[Appliance], routines: list[Routine], config: EnergyConfig):
+    def __init__(self, appliances: list[Appliance], routines: list[Routine], config: HomeConfig):
         """Constructor.
 
         Args:
@@ -78,7 +77,8 @@ class ConsumptionsMatrix():
                 if conflicting_actions is None:
                     continue
 
-                raise InconsistentRoutinesError([routine, other_routine], conflicting_actions[0].appliance)
+                raise InconsistentRoutinesError(
+                    [routine, other_routine], conflicting_actions[0].appliance)
 
         for routine in routines:
             if not routine.enabled:
@@ -106,28 +106,16 @@ class ConsumptionsMatrix():
                 time = datetime.today().replace(hour=minute_of_day//60, minute=minute_of_day % 60)
                 raise MaxPowerExceededError(config.max_power, time)
 
-    def most_consuming_routines(self, when: datetime) -> list[Routine]:
-        """Return the routines ordered by power consumption at a given time.
-
-        Args:
-            when (datetime): The time to order the routines.
-
-        Returns:
-            list[Routine]: The routines ordered by power consumption at the given time.
-        """
-
-        return sorted(self.routines, key=lambda r: r.power_consumption_at(when), reverse=True)
-
-    def add_routine(self, routine: Routine) -> ConsumptionsMatrix:
+    def add_routine(self, routine: Routine) -> StateMatrix:
         """Creates a new matrix with a new routine added.
 
         Args:
             routine (Routine): The routine to add.
 
         Returns:
-            ConsumptionsMatrix: The new matrix with the new routine added.
+            StateMatrix: The new matrix with the new routine added.
         """
-        return ConsumptionsMatrix(self.appliances, self.routines + [routine], self.config)
+        return StateMatrix(self.appliances, self.routines + [routine], self.config)
 
     def total_consumption(self, when: datetime) -> float:
         """Calculate the total consumption of the house at a given time.
@@ -207,7 +195,7 @@ class CostsMatrix:
     https://www.arera.it/bolletta/glossario-dei-termini/dettaglio/fasce-orarie
     """
 
-    def __init__(self, config: EnergyConfig) -> None:
+    def __init__(self, config: HomeConfig) -> None:
         self.config = config
         self.matrix = np.zeros(
             (const.DAYS_IN_WEEK, const.HOURS_IN_DAY), dtype=float)
@@ -232,10 +220,12 @@ class CostsMatrix:
 
                 if day_of_week <= const.DAY_OF_WEEK_SATURDAY:
                     if day_of_week <= const.DAY_OF_WEEK_FRIDAY:
-                        self.matrix[day_of_week, 7] = config.energy_rates_prices[1]
+                        self.matrix[day_of_week,
+                                    7] = config.energy_rates_prices[1]
                         self.matrix[day_of_week,
                                     8:18+1] = config.energy_rates_prices[0]
-                        self.matrix[day_of_week, 19:22+1] = config.energy_rates_prices[1]
+                        self.matrix[day_of_week, 19:22 +
+                                    1] = config.energy_rates_prices[1]
                     else:
                         # Set monday to friday from 8:00 to 18:00 to F1
                         self.matrix[day_of_week,
@@ -263,10 +253,9 @@ class CostsMatrix:
         Returns:
             float: The cost of the electricity for the sequence.
         """
-        test = self.matrix[when.weekday(), when.hour:(
+        return self.matrix[when.weekday(), when.hour:(
             when + duration).hour + 1].sum()
-        return test
-    
+
     def raw_matrix(self) -> np.ndarray:
         """Return the raw matrix.
 
@@ -277,44 +266,58 @@ class CostsMatrix:
 
 
 class RoutineOptimizer:
-    def __init__(self, consumptions_matrix: ConsumptionsMatrix, costs_matrix: CostsMatrix) -> None:
-        self.consumptions_matrix = consumptions_matrix
+    def __init__(self, state_matrix: StateMatrix, costs_matrix: CostsMatrix) -> None:
+        self.state_matrix = state_matrix
         self.costs_matrix = costs_matrix
+        self.config = state_matrix.config
 
     def find_best_start_time(self, routine: Routine) -> tuple[datetime, float] | None:
+        if self.config.activity_hours is not None:
+            start = self.config.activity_hours[0].hour * \
+                60 + self.config.activity_hours[0].minute
+            end = self.config.activity_hours[1].hour * \
+                60 + self.config.activity_hours[1].minute
+        else:
+            start = 0
+            end = const.MINUTES_IN_DAY
+
+        print(start)
+
         # Calculate the latest end time of the routine so that
         # the longest running action is completed before the end of the day.
         latest_end_time = min(
-            const.MINUTES_IN_DAY - action.duration for action in routine.actions if action.duration is not None)
+            end - action.duration for action in routine.actions if action.duration is not None)
 
         # Calculate the cost of starting the routine at each minute of the day
         routine_costs_per_minute = np.array([self.__routine_cost(routine, routine.when.replace(
-            hour=minute//60, minute=minute % 60)) for minute in range(0, latest_end_time)])
+            hour=minute//60, minute=minute % 60)) for minute in range(0, latest_end_time+1)])
 
         # Calculate the cost of the original routine
         original_routine_cost = routine_costs_per_minute[routine.when.hour *
                                                          60 + routine.when.minute]
 
         # Get the list of indices of the routine costs ordered by cost
-        min_indices = np.argsort(routine_costs_per_minute)
-        min_values = routine_costs_per_minute[min_indices]
+        sorted_minutes = np.argsort(routine_costs_per_minute)
 
         # Iterate the ordered indices of the routine costs
-        for _, i in enumerate(min_indices):
+        for m in sorted_minutes:
+            if m < start:
+                continue
+
             # If the cost of the routine at the current iteration is greater than the original cost, return
-            if min_values[i] >= original_routine_cost:
+            if routine_costs_per_minute[m] >= original_routine_cost:
                 return None
 
             old_when = routine.when
             new_when = routine.when.replace(
-                hour=min_indices[i]//60, minute=min_indices[i] % 60)
+                hour=m//60, minute=m % 60)
 
             # Try to add the routine to the matrix at the new time.
             # If it fails, continue to the next iteration.
             try:
                 routine.when = new_when
-                self.consumptions_matrix.add_routine(routine)
-                return new_when, original_routine_cost - min_values[i]
+                self.state_matrix.add_routine(routine)
+                return new_when, original_routine_cost - routine_costs_per_minute[m]
             except ConflictError:
                 routine.when = old_when
                 continue

@@ -1,10 +1,6 @@
 import { createContext, useState, useEffect } from "react";
 
-import * as noConflict from "../test_routines/no_conflict.json";
-import * as maxPowerExceeded from "../test_routines/max_power_exceeded.json";
-import * as conflictingModes from "../test_routines/conflicting_modes.json";
-
-const rawSimulatedRoutines = [noConflict, maxPowerExceeded, conflictingModes];
+import rawSimulatedRoutines from "../simulated_routines.json";
 
 export const DigitalTwinContext = createContext({
   consumptionNow: 0,
@@ -93,7 +89,7 @@ const DigitalTwinContextProvider = ({ children }) => {
 
     setMostConsumingAppliances(mostConsuming);
 
-    const simulatedRoutines = rawSimulatedRoutines.map((routine) => {
+    const simulatedRoutines = rawSimulatedRoutines.map(({ name, routine }) => {
       const simulatedActions = routine.actions.map((action) => {
         const appliance = appliancesData.find(
           (appliance) => appliance.id === action.appliance_id,
@@ -101,7 +97,7 @@ const DigitalTwinContextProvider = ({ children }) => {
         const mode = appliance.modes.find((mode) => mode.id === action.mode_id);
         return { ...action, mode, appliance, duration: action.duration };
       });
-      return { ...routine, actions: simulatedActions };
+      return { name, routine: { ...routine, actions: simulatedActions } };
     });
     setSimulatedRoutines(simulatedRoutines);
   };

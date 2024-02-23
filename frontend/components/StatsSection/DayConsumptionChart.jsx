@@ -12,7 +12,7 @@ const DayConsumptionChart = ({ data, className }) => {
     <div
       className={`flex max-w-4xl flex-col justify-between rounded-lg bg-gray-100 p-8 dark:bg-gray-800 ${className}`}
     >
-      <h2>Predicted Consumptions for Today</h2>
+      <h2>Predicted Total Consumptions for Today</h2>
       <ConsumptionChart series={series} className={className} />
     </div>
   );

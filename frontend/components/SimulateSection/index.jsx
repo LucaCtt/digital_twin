@@ -22,8 +22,8 @@ const SimulateSection = () => {
         style="underline"
         onActiveTabChange={() => resetSimulationStatus()}
       >
-        {simulatedRoutines.map((routine) => (
-          <Tabs.Item title={routine.name} key={routine.id}>
+        {simulatedRoutines.map(({ name, routine }) => (
+          <Tabs.Item title={name} key={routine.id}>
             <div className="flex flex-col gap-8">
               <SimulatedRoutineDetails routine={routine} />
               <Button

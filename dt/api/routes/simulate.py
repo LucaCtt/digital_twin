@@ -4,11 +4,11 @@ from fastapi import APIRouter, Query
 
 from dt.api import schemas
 from dt.data import DataRepository, Routine, RoutineAction, Appliance
-from dt.energy import ConsumptionsMatrix, CostsMatrix, InconsistentRoutinesError, MaxPowerExceededError, RoutineOptimizer
+from dt.energy import StateMatrix, CostsMatrix, InconsistentRoutinesError, MaxPowerExceededError, RoutineOptimizer
 from .. import errors
 
 
-def get_simulate_router(repository: DataRepository, matrix: ConsumptionsMatrix, costs: CostsMatrix, tags: list[str | Enum]) -> APIRouter:
+def get_simulate_router(repository: DataRepository, matrix: StateMatrix, costs: CostsMatrix, tags: list[str | Enum]) -> APIRouter:
     router = APIRouter(tags=tags, prefix="/simulate")
 
     @router.post("")
@@ -33,10 +33,15 @@ def get_simulate_router(repository: DataRepository, matrix: ConsumptionsMatrix, 
         except MaxPowerExceededError as e:
             error = e
 
-            most_consuming = matrix.most_consuming_routines(e.when)
-            recommendation = schemas.RecommendationOut(type=schemas.RecommendationType.disable_routine,
-                                                       context={"routine": schemas.RoutineOut.model_validate(most_consuming[0])})
-            recommendations.append(recommendation)
+            list = matrix.routines.copy()
+            list.append(routine_model)
+            most_consuming = sorted(list, key=lambda r: r.power_consumption_at(
+                routine_model.when), reverse=True)
+
+            recommendations.append(schemas.RecommendationOut(type=schemas.RecommendationType.disable_routine,
+                                                             context={"routine": schemas.RoutineOut.model_validate(most_consuming[0])}))
+            recommendations.append(schemas.RecommendationOut(type=schemas.RecommendationType.disable_routine,
+                                                             context={"routine": schemas.RoutineOut.model_validate(most_consuming[1])}))
 
         # Try to find the best start time for the routine
         optimizer = RoutineOptimizer(matrix, costs)
@@ -150,7 +155,8 @@ def __context_to_schemas(context: dict) -> dict:
         if type(value) is Routine:
             context[key] = schemas.RoutineOut.model_validate(value)
         if type(value) is list:
-            context[key] = [schemas.RoutineOut.model_validate(r) for r in value] 
+            context[key] = [
+                schemas.RoutineOut.model_validate(r) for r in value]
         if type(value) is RoutineAction:
             context[key] = schemas.RoutineActionOut.model_validate(value)
         if type(value) is Appliance:

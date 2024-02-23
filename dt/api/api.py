@@ -13,8 +13,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException
 
 from dt.data import DataRepository
-from dt.config import EnergyConfig
-from dt.energy import ConflictError, ConsumptionsMatrix, CostsMatrix
+from dt.config import HomeConfig
+from dt.energy import ConflictError, StateMatrix, CostsMatrix
 from . import routes
 from . import schemas
 
@@ -43,11 +43,11 @@ TAGS_METADATA = [
 ]
 
 
-def create_api(repository: DataRepository, config: EnergyConfig, title="Digital Twin API", version: str = "1.0.0") -> FastAPI:
+def create_api(repository: DataRepository, config: HomeConfig, title="Digital Twin API", version: str = "1.0.0") -> FastAPI:
     """Create a FastAPI instance.
 
     Create a new FastAPI instance, using the given data repository and
-    consumptions matrix. These are not passed to routes using dependency injection
+    state matrix. These are not passed to routes using dependency injection
     as they are global to the application.
 
     Args:
@@ -59,7 +59,7 @@ def create_api(repository: DataRepository, config: EnergyConfig, title="Digital 
     Returns:
         FastAPI: The FastAPI instance.
     """
-    matrix = ConsumptionsMatrix(
+    matrix = StateMatrix(
         repository.get_appliances(), repository.get_routines(), config)
     costs = CostsMatrix(config)
 
