@@ -7,6 +7,8 @@ This script plots the consumptions matrix of the appliances in the database.
 
 import datetime
 import os
+from pdb import run
+from fastapi import background
 import matplotlib
 from matplotlib.colors import ListedColormap
 import matplotlib.pyplot as plt
@@ -26,7 +28,6 @@ SAVE = True
 
 plt.rcParams['axes.labelsize'] = "medium"
 plt.rcParams['font.size'] = 11
-plt.rcParams['font.family'] = "serif"
 plt.rcParams['savefig.bbox'] = "tight"
 
 
@@ -45,7 +46,7 @@ def __prepare_matrix_figure(appliances: list[Appliance], routines: list[Routine]
     matrix_raw = StateMatrix(appliances, routines, config).raw_matrix()
     matrix_masked = np.ma.masked_where(matrix_raw == 0, matrix_raw)
 
-    c_map = cm.get_cmap('tab10')
+    c_map = ListedColormap(["#aaaaaa"])
     c_map.set_bad('whitesmoke')
 
     plt.figure(title, figsize=(10, 10))
@@ -77,8 +78,7 @@ def __prepare_matrix_figure(appliances: list[Appliance], routines: list[Routine]
         for m in middle_points:
             mode = next(
                 mode for mode in appliance_modes if mode.id == column[m])
-            plt.text(appliance_id, m, mode.name.title(), ha="center", va="center", color="w").set_path_effects(
-                [patheffects.withStroke(linewidth=2, foreground='k')])
+            plt.text(appliance_id, m, mode.name.title(), ha="center", va="center", color="k", bbox=dict(boxstyle="round", facecolor='w', edgecolor='#aaaaaa',pad=0.3))
 
     plt.xticks(range(len(appliances)), appliances_names,
                rotation=45, ha="left", rotation_mode="anchor")
@@ -93,7 +93,7 @@ def __prepare_matrix_figure(appliances: list[Appliance], routines: list[Routine]
 
     plt.tight_layout()
     if SAVE:
-        plt.savefig(f"{title}.png", dpi=300)
+        plt.savefig(f"{title}.png", dpi=300, transparent=True)
 
 
 def plot_state_matrix(repository: DataRepository, config: HomeConfig):
@@ -154,4 +154,4 @@ def plot_costs_matrix():
 
 
 if __name__ == "__main__":
-    plot_costs_matrix()
+    run_plots()
